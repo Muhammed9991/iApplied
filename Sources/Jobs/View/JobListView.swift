@@ -140,15 +140,23 @@ public struct JobsListView: View {
         JobCardView(
             job: job,
             isCompact: $isCompact,
-            onEdit: { jobApplication = job },
+            onEdit: {
+                jobApplication = job
+                destination = .jobForm(job)
+            },
             onDelete: {
-                setDeleteJobConfirmationDialog()
+                jobApplication = job
+                destination = .confirmationDialog("Are you sure you want to delete this job application?")
             }
         )
         .listRowInsets(EdgeInsets())
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
         .contentShape(Rectangle())
+        .onTapGesture {
+            jobApplication = job
+            destination = .jobForm(job)
+        }
         .transition(.opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .trailing)))
         .id(job.id)
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -168,7 +176,7 @@ public struct JobsListView: View {
             }
             
             Button {
-                jobApplication = job
+                destination = .jobForm(job)
             } label: {
                 Label("Edit", systemImage: "pencil")
             }

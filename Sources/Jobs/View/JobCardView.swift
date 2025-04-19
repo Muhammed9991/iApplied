@@ -40,18 +40,6 @@ struct JobCardView: View {
                             .foregroundColor(.secondary)
                         
                         Spacer()
-                        
-                        HStack(spacing: 12) {
-                            Button(action: onEdit) {
-                                Image(systemName: "pencil")
-                                    .foregroundColor(AppColors.accent)
-                            }
-                            
-                            Button(action: onDelete) {
-                                Image(systemName: "trash")
-                                    .foregroundColor(.red)
-                            }
-                        }
                     }
                 }
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
