@@ -3,25 +3,21 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		09FF2A492C3694080047D325 /* EntryPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09FF2A482C3694080047D325 /* EntryPoint.swift */; };
-		09FF2A4B2C3694080047D325 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09FF2A4A2C3694080047D325 /* ContentView.swift */; };
-		09FF2A4D2C36940A0047D325 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 09FF2A4C2C36940A0047D325 /* Assets.xcassets */; };
-		09FF2A502C36940A0047D325 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 09FF2A4F2C36940A0047D325 /* Preview Assets.xcassets */; };
 		797C340D2DB31C8B00CB4D49 /* Jobs in Frameworks */ = {isa = PBXBuildFile; productRef = 797C340C2DB31C8B00CB4D49 /* Jobs */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		09FF2A452C3694080047D325 /* ApplyPal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ApplyPal.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		09FF2A482C3694080047D325 /* EntryPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryPoint.swift; sourceTree = "<group>"; };
-		09FF2A4A2C3694080047D325 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		09FF2A4C2C36940A0047D325 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		09FF2A4F2C36940A0047D325 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		09FF2A562C36958B0047D325 /* Sample */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Sample; path = ..; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		797C34132DB3215D00CB4D49 /* ApplyPal */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = ApplyPal; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		09FF2A422C3694080047D325 /* Frameworks */ = {
@@ -46,7 +42,7 @@
 			isa = PBXGroup;
 			children = (
 				09FF2A562C36958B0047D325 /* Sample */,
-				09FF2A472C3694080047D325 /* ApplyPal */,
+				797C34132DB3215D00CB4D49 /* ApplyPal */,
 				09FF2A462C3694080047D325 /* Products */,
 				096384F72C369939009814F6 /* Frameworks */,
 			);
@@ -58,25 +54,6 @@
 				09FF2A452C3694080047D325 /* ApplyPal.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		09FF2A472C3694080047D325 /* ApplyPal */ = {
-			isa = PBXGroup;
-			children = (
-				09FF2A482C3694080047D325 /* EntryPoint.swift */,
-				09FF2A4A2C3694080047D325 /* ContentView.swift */,
-				09FF2A4C2C36940A0047D325 /* Assets.xcassets */,
-				09FF2A4E2C36940A0047D325 /* Preview Content */,
-			);
-			path = ApplyPal;
-			sourceTree = "<group>";
-		};
-		09FF2A4E2C36940A0047D325 /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				09FF2A4F2C36940A0047D325 /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -93,6 +70,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				797C34132DB3215D00CB4D49 /* ApplyPal */,
 			);
 			name = ApplyPal;
 			packageProductDependencies = (
@@ -140,8 +120,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				09FF2A502C36940A0047D325 /* Preview Assets.xcassets in Resources */,
-				09FF2A4D2C36940A0047D325 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -152,8 +130,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				09FF2A4B2C3694080047D325 /* ContentView.swift in Sources */,
-				09FF2A492C3694080047D325 /* EntryPoint.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
