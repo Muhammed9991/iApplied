@@ -28,6 +28,26 @@ public struct JobsListView: View {
         }
     }
     
+    func archiveJob(_ job: JobApplication) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            if let index = jobApplications.firstIndex(where: { $0.id == job.id }) {
+                var updatedJob = job
+                updatedJob.status = .archived
+                jobApplications[index] = updatedJob
+            }
+        }
+    }
+    
+    func restoreJob(_ job: JobApplication) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            if let index = jobApplications.firstIndex(where: { $0.id == job.id }) {
+                var updatedJob = job
+                updatedJob.status = .applied // Restore to "Applied" status
+                jobApplications[index] = updatedJob
+            }
+        }
+    }
+    
     public var body: some View {
         NavigationStack {
             ZStack {
@@ -37,46 +57,97 @@ public struct JobsListView: View {
                 if jobApplications.isEmpty {
                     emptyStateView
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(jobApplications.filter { $0.status != .archived }) { job in
-                                JobCardView(
-                                    job: job,
-                                    isCompact: $isCompact,
-                                    onEdit: { editingJob = job },
-                                    onDelete: {
-                                        confirmingDelete = job
-                                    }
-                                )
-                                .transition(.opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .trailing)))
-                                .id(job.id)
+                    List {
+                        ForEach(jobApplications.filter { $0.status != .archived }) { job in
+                            JobCardView(
+                                job: job,
+                                isCompact: $isCompact,
+                                onEdit: { editingJob = job },
+                                onDelete: {
+                                    confirmingDelete = job
+                                }
+                            )
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .contentShape(Rectangle())
+                            .transition(.opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .trailing)))
+                            .id(job.id)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    confirmingDelete = job
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                                
+                                Button {
+                                    editingJob = job
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+                                .tint(AppColors.accent)
                             }
-                            
-                            // TODO: needs to show an archive button which shows you previously applied jobs
-                            if !jobApplications.filter({ $0.status == .archived }).isEmpty {
-                                Section(header:
-                                    Text("Archived Applications")
-                                        .font(AppTypography.title)
-                                        .foregroundColor(AppColors.primary)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.top, 20)
-                                ) {
-                                    ForEach(jobApplications.filter { $0.status == .archived }) { job in
-                                        JobCardView(
-                                            job: job,
-                                            isCompact: $isCompact,
-                                            onEdit: { editingJob = job },
-                                            onDelete: { confirmingDelete = job }
-                                        )
-                                        .transition(.opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .trailing)))
-                                        .id(job.id)
+                            .swipeActions(edge: .leading) {
+                                Button {
+                                    archiveJob(job)
+                                } label: {
+                                    Label("Archive", systemImage: "archivebox")
+                                }
+                                .tint(.gray)
+                            }
+                        }
+                        
+                        // Archived section
+                        if !jobApplications.filter({ $0.status == .archived }).isEmpty {
+                            Section(header:
+                                Text("Archived Applications")
+                                    .font(AppTypography.title)
+                                    .foregroundColor(AppColors.primary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.top, 20)
+                            ) {
+                                ForEach(jobApplications.filter { $0.status == .archived }) { job in
+                                    JobCardView(
+                                        job: job,
+                                        isCompact: $isCompact,
+                                        onEdit: { editingJob = job },
+                                        onDelete: { confirmingDelete = job }
+                                    )
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowBackground(Color.clear)
+                                    .listRowSeparator(.hidden)
+                                    .contentShape(Rectangle())
+                                    .transition(.opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .trailing)))
+                                    .id(job.id)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        Button(role: .destructive) {
+                                            confirmingDelete = job
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                        
+                                        Button {
+                                            editingJob = job
+                                        } label: {
+                                            Label("Edit", systemImage: "pencil")
+                                        }
+                                        .tint(AppColors.accent)
+                                    }
+                                    .swipeActions(edge: .leading) {
+                                        Button {
+                                            restoreJob(job)
+                                        } label: {
+                                            Label("Restore", systemImage: "arrow.uturn.left")
+                                        }
+                                        .tint(.blue)
                                     }
                                 }
                             }
                         }
-                        .padding(.horizontal)
-                        .padding(.top)
                     }
+                    .padding(.horizontal)
+                    .listStyle(.plain)
+                    .background(AppColors.background)
                 }
             }
             .onChange(of: viewMode) { _, newValue in

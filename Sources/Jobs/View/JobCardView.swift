@@ -65,19 +65,8 @@ struct JobCardView: View {
                     
                     Spacer()
                     
-                    Menu {
-                        Button(action: onEdit) {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                        
-                        Button(role: .destructive, action: onDelete) {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .foregroundColor(AppColors.primary)
-                            .padding(5)
-                    }
+                    Spacer()
+                        .frame(width: 30)
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
