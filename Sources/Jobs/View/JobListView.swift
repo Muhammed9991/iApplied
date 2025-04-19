@@ -9,8 +9,9 @@ enum ViewMode {
 }
 
 public struct JobsListView: View {
-    @State var jobApplications: [JobApplication] = []
+    @State var jobApplications: [JobApplication] = [.mock]
     @State var viewMode: ViewMode = .compact
+    @State var isCompact: Bool = true
     @State private var showingAddSheet = false
     @State private var editingJob: JobApplication?
     @State private var confirmingDelete: JobApplication?
@@ -39,7 +40,7 @@ public struct JobsListView: View {
                             ForEach(jobApplications.filter { $0.status != .archived }) { job in
                                 JobCardView(
                                     job: job,
-                                    isCompact: viewMode == .compact,
+                                    isCompact: $isCompact,
                                     onEdit: { editingJob = job },
                                     onDelete: {
                                         confirmingDelete = job
@@ -59,7 +60,7 @@ public struct JobsListView: View {
                                     ForEach(jobApplications.filter { $0.status == .archived }) { job in
                                         JobCardView(
                                             job: job,
-                                            isCompact: viewMode == .compact,
+                                            isCompact: $isCompact,
                                             onEdit: { editingJob = job },
                                             onDelete: { confirmingDelete = job }
                                         )
@@ -71,6 +72,9 @@ public struct JobsListView: View {
                         .padding(.top)
                     }
                 }
+            }
+            .onChange(of: viewMode) { _, newValue in
+                isCompact = newValue == .compact
             }
             .navigationTitle("Applications")
             .toolbar {
