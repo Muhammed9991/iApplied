@@ -2,7 +2,7 @@
 
 import Foundation
 
-public struct JobApplication: Identifiable, Codable {
+public struct JobApplication: Identifiable, Codable, Hashable {
     public var id: UUID
     var title: String
     var company: String

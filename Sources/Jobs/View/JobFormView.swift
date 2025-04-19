@@ -77,7 +77,7 @@ struct JobFormView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        onSave(nil)
+                        dismiss()
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -101,8 +101,6 @@ struct JobFormView: View {
                     }
                 }
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
         }
     }
 }

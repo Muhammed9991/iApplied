@@ -1,20 +1,25 @@
 //  Created by Muhammed Mahmood on 19/04/2025.
 
 import SwiftUI
+import SwiftUINavigation
 import Theme
 
-enum ViewMode {
-    case full
-    case compact
+@CasePathable
+enum Destination {
+    case confirmationDialog(String)
+    case jobForm(JobApplication?)
 }
 
 public struct JobsListView: View {
     @State private var jobApplications: [JobApplication] = [.mock]
     @State private var viewMode: ViewMode = .compact
     @State private var isCompact: Bool = true
-    @State private var showingAddSheet = false
-    @State private var editingJob: JobApplication?
-    @State private var confirmingDelete: JobApplication?
+    @State private var jobApplication: JobApplication?
+    @State var destination: Destination?
+    enum ViewMode {
+        case full
+        case compact
+    }
     
     public init() {}
     
@@ -51,6 +56,10 @@ public struct JobsListView: View {
         updateJobStatus(job, to: .applied)
     }
     
+    private func setDeleteJobConfirmationDialog() {
+        destination = .confirmationDialog("Are you sure you want to delete this job application?")
+    }
+    
     // MARK: - Main Body
 
     public var body: some View {
@@ -73,12 +82,16 @@ public struct JobsListView: View {
                 leadingToolbarItems
                 trailingToolbarItems
             }
-            .confirmationDialog(
-                "Are you sure you want to delete this job application?",
-                isPresented: .constant(confirmingDelete != nil),
-                titleVisibility: .visible
-            ) {
+            .alert(item: $destination.confirmationDialog) { text in
+                Text(text)
+            } actions: { _ in
                 deleteConfirmationButtons
+            }
+            .sheet(item: $destination.jobForm, id: \.self) { job in
+                JobFormView(job: job) { _ in
+                    let _ = print("jobApplication save button tapped")
+                }
+                .interactiveDismissDisabled()
             }
         }
     }
@@ -127,8 +140,10 @@ public struct JobsListView: View {
         JobCardView(
             job: job,
             isCompact: $isCompact,
-            onEdit: { editingJob = job },
-            onDelete: { confirmingDelete = job }
+            onEdit: { jobApplication = job },
+            onDelete: {
+                setDeleteJobConfirmationDialog()
+            }
         )
         .listRowInsets(EdgeInsets())
         .listRowBackground(Color.clear)
@@ -147,13 +162,13 @@ public struct JobsListView: View {
     private func trailingSwipeActions(for job: JobApplication) -> some View {
         Group {
             Button(role: .destructive) {
-                confirmingDelete = job
+                setDeleteJobConfirmationDialog()
             } label: {
                 Label("Delete", systemImage: "trash")
             }
             
             Button {
-                editingJob = job
+                jobApplication = job
             } label: {
                 Label("Edit", systemImage: "pencil")
             }
@@ -184,16 +199,16 @@ public struct JobsListView: View {
     private var deleteConfirmationButtons: some View {
         Group {
             Button("Delete", role: .destructive) {
-                if let job = confirmingDelete {
+                if let job = jobApplication {
                     withAnimation {
                         deleteJob(job)
-                        confirmingDelete = nil
+                        destination = nil
                     }
                 }
             }
             
             Button("Cancel", role: .cancel) {
-                confirmingDelete = nil
+                destination = nil
             }
         }
     }
@@ -210,9 +225,9 @@ public struct JobsListView: View {
     
     private var trailingToolbarItems: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
-            Button(action: {
-                showingAddSheet = true
-            }) {
+            Button {
+                destination = .jobForm(jobApplication)
+            } label: {
                 Image(systemName: "plus")
                     .fontWeight(.semibold)
             }
@@ -254,9 +269,9 @@ public struct JobsListView: View {
     }
     
     private var addApplicationButton: some View {
-        Button(action: {
-            showingAddSheet = true
-        }) {
+        Button {
+            destination = .jobForm(jobApplication)
+        } label: {
             Text("Add Application")
                 .font(.headline)
                 .foregroundColor(.white)
