@@ -42,6 +42,18 @@ public struct JobsListView: View {
         }
     }
     
+    private func saveJob(_ job: JobApplication) {
+        withAnimation(jobAnimation) {
+            if let index = jobApplications.firstIndex(where: { $0.id == job.id }) {
+                // Update existing job
+                jobApplications[index] = job
+            } else {
+                // Add new job
+                jobApplications.append(job)
+            }
+        }
+    }
+    
     private func deleteJob(_ job: JobApplication) {
         withAnimation(jobAnimation) {
             jobApplications.removeAll { $0.id == job.id }
@@ -88,8 +100,11 @@ public struct JobsListView: View {
                 deleteConfirmationButtons
             }
             .sheet(item: $destination.jobForm, id: \.self) { job in
-                JobFormView(job: job) { _ in
-                    let _ = print("jobApplication save button tapped")
+                JobFormView(job: job) { savedJob in
+                    if let savedJob = savedJob {
+                        saveJob(savedJob)
+                    }
+                    destination = nil
                 }
                 .interactiveDismissDisabled()
             }
