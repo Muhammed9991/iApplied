@@ -23,7 +23,9 @@ public struct JobsListView: View {
     }
     
     func deleteJob(_ job: JobApplication) {
-        jobApplications.removeAll { $0.id == job.id }
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            jobApplications.removeAll { $0.id == job.id }
+        }
     }
     
     public var body: some View {
@@ -46,6 +48,8 @@ public struct JobsListView: View {
                                         confirmingDelete = job
                                     }
                                 )
+                                .transition(.opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .trailing)))
+                                .id(job.id)
                             }
                             
                             // TODO: needs to show an archive button which shows you previously applied jobs
@@ -64,6 +68,8 @@ public struct JobsListView: View {
                                             onEdit: { editingJob = job },
                                             onDelete: { confirmingDelete = job }
                                         )
+                                        .transition(.opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .trailing)))
+                                        .id(job.id)
                                     }
                                 }
                             }
