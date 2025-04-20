@@ -5,11 +5,11 @@ import GRDB
 
 public struct JobApplication: Identifiable, Codable, Hashable, FetchableRecord, MutablePersistableRecord, Sendable {
     public static let databaseTableName = "jobApplications"
-    
+
     public var id: Int64?
     var title: String
     var company: String
-    var dateCreated: Date?
+    var createdAt: Date
     var dateApplied: Date
     var status: String
     var notes: String?
@@ -17,6 +17,7 @@ public struct JobApplication: Identifiable, Codable, Hashable, FetchableRecord, 
 
     public init(
         id: Int64? = nil,
+        createdAt: Date = Date(),
         title: String,
         company: String,
         dateApplied: Date,
@@ -25,6 +26,7 @@ public struct JobApplication: Identifiable, Codable, Hashable, FetchableRecord, 
         lastFollowUpDate: Date? = nil
     ) {
         self.id = id
+        self.createdAt = createdAt
         self.title = title
         self.company = company
         self.dateApplied = dateApplied
