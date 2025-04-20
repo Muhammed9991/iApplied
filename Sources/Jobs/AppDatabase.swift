@@ -28,7 +28,7 @@ public func appDatabase() throws -> any DatabaseWriter {
     migrator.registerMigration("Add job applications lists table") { db in
         try db.create(table: JobApplication.databaseTableName) { table in
             table.autoIncrementedPrimaryKey("id")
-            table.column("dateCreated", .datetime).defaults(sql: "CURRENT_TIMESTAMP")
+            table.column("createdAt", .datetime).defaults(sql: "CURRENT_TIMESTAMP")
             table.column("title", .text).notNull()
             table.column("company", .text).notNull()
             table.column("dateApplied", .datetime).notNull()

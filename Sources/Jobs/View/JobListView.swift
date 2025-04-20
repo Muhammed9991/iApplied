@@ -14,7 +14,8 @@ enum Destination {
 public struct JobsListView: View {
     @SharedReader(.fetchAll(sql: "SELECT * FROM jobApplications")) var jobApplications: [JobApplication]
     
-    @State private var legacyJobApplications: [JobApplication] = [.mock]
+    @Dependency(\.defaultDatabase) var database
+
     @State private var viewMode: ViewMode = .compact
     @State private var isCompact: Bool = true
     @State private var jobApplication: JobApplication?
@@ -37,29 +38,52 @@ public struct JobsListView: View {
     
     private func updateJobStatus(_ job: JobApplication, to status: ApplicationStatus) {
         withAnimation(jobAnimation) {
-            if let index = legacyJobApplications.firstIndex(where: { $0.id == job.id }) {
-                var updatedJob = job
-//                updatedJob.status = status
-                legacyJobApplications[index] = updatedJob
+            var updatedJob = job
+            updatedJob.status = status.rawValue
+            do {
+                try database.write { db in
+                    try updatedJob.update(db)
+                }
+            } catch {
+                print("Failed to update job status in database")
             }
         }
     }
     
     private func saveJob(_ job: JobApplication) {
         withAnimation(jobAnimation) {
-            if let index = legacyJobApplications.firstIndex(where: { $0.id == job.id }) {
+            if jobApplications.firstIndex(where: { $0.id == job.id }) != nil {
                 // Update existing job
-                legacyJobApplications[index] = job
+                do {
+                    try database.write { db in
+                        try job.update(db)
+                    }
+                } catch {
+                    print("Failed to update job in database")
+                }
             } else {
                 // Add new job
-                legacyJobApplications.append(job)
+                do {
+                    var newJob = job
+                    try database.write { db in
+                        try newJob.insert(db)
+                    }
+                } catch {
+                    print("Failed to insert new job to database")
+                }
             }
         }
     }
     
     private func deleteJob(_ job: JobApplication) {
         withAnimation(jobAnimation) {
-            legacyJobApplications.removeAll { $0.id == job.id }
+            do {
+                _ = try database.write { db in
+                    try job.delete(db)
+                }
+            } catch {
+                print("Failed to delete job in database")
+            }
         }
     }
     
