@@ -3,7 +3,7 @@
 import SwiftUI
 import Theme
 
-public enum ApplicationStatus: String, CaseIterable, Codable {
+public enum ApplicationStatus: String, CaseIterable, Codable, Sendable {
     case applied = "Applied"
     case interview = "Interview"
     case offer = "Offer"
@@ -21,4 +21,15 @@ public enum ApplicationStatus: String, CaseIterable, Codable {
     }
 
     var needsFollowUp: Bool { self == .applied }
+    
+    static func toApplicationStatus(from string: String) -> Self {
+        switch string {
+        case "Applied": .applied
+        case "Interview": .interview
+        case "Offer": .offer
+        case "Declined": .declined
+        case  "Archived": .archived
+        default: fatalError("Unknown status")
+        }
+    }
 }
