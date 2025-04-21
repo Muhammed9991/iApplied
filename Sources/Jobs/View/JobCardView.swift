@@ -6,8 +6,6 @@ import Theme
 
 struct JobCardView: View {
     @Bindable var store: StoreOf<JobCardLogic>
-    let onEdit: () -> Void
-    let onDelete: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -81,9 +79,7 @@ struct JobCardView: View {
                     isCompact: false
                 ),
                 reducer: { JobCardLogic() }
-            ),
-            onEdit: {},
-            onDelete: {}
+            )
         )
         
         Text("Compact")
@@ -95,9 +91,7 @@ struct JobCardView: View {
                     isCompact: true
                 ),
                 reducer: { JobCardLogic() }
-            ),
-            onEdit: {},
-            onDelete: {}
+            )
         )
     }
     .padding()

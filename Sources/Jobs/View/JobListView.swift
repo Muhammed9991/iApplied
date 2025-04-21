@@ -93,13 +93,7 @@ public struct JobsListView: View {
                     isCompact: store.isCompact
                 ),
                 reducer: { JobCardLogic() }
-            ),
-            onEdit: {
-                store.send(.onEditButtonTapped(job))
-            },
-            onDelete: {
-                store.send(.onDeleteButtonTapped(job))
-            }
+            )
         )
         .listRowInsets(EdgeInsets())
         .listRowBackground(Color.clear)
