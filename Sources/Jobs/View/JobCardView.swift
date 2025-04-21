@@ -5,8 +5,7 @@ import SwiftUI
 import Theme
 
 struct JobCardView: View {
-    let job: JobApplication
-    @Binding var isCompact: Bool
+    @Bindable var store: StoreOf<JobCardLogic>
     let onEdit: () -> Void
     let onDelete: () -> Void
     
@@ -14,12 +13,12 @@ struct JobCardView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(job.company)
+                    Text(store.job.company)
                         .font(AppTypography.title)
                         .foregroundColor(AppColors.primary)
                     
-                    if !isCompact {
-                        Text(job.title)
+                    if !store.isCompact {
+                        Text(store.job.title)
                             .font(AppTypography.body)
                             .transition(.opacity.combined(with: .scale))
                     }
@@ -27,16 +26,16 @@ struct JobCardView: View {
                 
                 Spacer()
                 
-                StatusBadgeView(status: job.status)
-                    .animation(.spring(response: 0.3), value: isCompact)
+                StatusBadgeView(status: store.job.status)
+                    .animation(.spring(response: 0.3), value: store.isCompact)
             }
             
-            if !isCompact {
+            if !store.isCompact {
                 VStack {
                     Divider()
                     
                     HStack {
-                        Text("Applied \(job.daysSinceApplied) day\(job.daysSinceApplied == 1 ? "" : "s") ago")
+                        Text("Applied \(store.job.daysSinceApplied) day\(store.job.daysSinceApplied == 1 ? "" : "s") ago")
                             .font(AppTypography.caption)
                             .foregroundColor(.secondary)
                         
@@ -48,7 +47,7 @@ struct JobCardView: View {
                 HStack {
                     Image(systemName: "calendar")
                         .foregroundColor(.secondary)
-                    Text("\(job.daysSinceApplied)d")
+                    Text("\(store.job.daysSinceApplied)d")
                         .font(AppTypography.caption)
                         .foregroundColor(.secondary)
                     
@@ -64,7 +63,7 @@ struct JobCardView: View {
         .background(AppColors.cardBackground)
         .cornerRadius(10)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isCompact)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: store.isCompact)
         .padding(.bottom, 8)
     }
 }
@@ -76,8 +75,13 @@ struct JobCardView: View {
         Text("Normal")
             .bold()
         JobCardView(
-            job: JobApplication.mock,
-            isCompact: .constant(false),
+            store: Store(
+                initialState: JobCardLogic.State(
+                    job: JobApplication.mock,
+                    isCompact: false
+                ),
+                reducer: { JobCardLogic() }
+            ),
             onEdit: {},
             onDelete: {}
         )
@@ -85,8 +89,13 @@ struct JobCardView: View {
         Text("Compact")
             .bold()
         JobCardView(
-            job: JobApplication.mock,
-            isCompact: .constant(true),
+            store: Store(
+                initialState: JobCardLogic.State(
+                    job: JobApplication.mock,
+                    isCompact: true
+                ),
+                reducer: { JobCardLogic() }
+            ),
             onEdit: {},
             onDelete: {}
         )

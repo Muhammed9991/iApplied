@@ -155,8 +155,13 @@ public struct JobsListView: View {
     
     private func jobCardView(for job: JobApplication, isArchived: Bool) -> some View {
         JobCardView(
-            job: job,
-            isCompact: $store.isCompact,
+            store: Store(
+                initialState: JobCardLogic.State(
+                    job: job,
+                    isCompact: store.isCompact
+                ),
+                reducer: { JobCardLogic() }
+            ),
             onEdit: {
                 store.send(.onEditButtonTapped(job))
             },
