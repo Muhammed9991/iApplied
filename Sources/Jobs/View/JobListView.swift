@@ -8,75 +8,10 @@ import Theme
 
 public struct JobsListView: View {
     @Bindable var store: StoreOf<JobsListLogic>
-    
-    @Dependency(\.defaultDatabase) var database
-    
+        
     /// Animation configuration used across job-related actions
     private var jobAnimation: Animation {
         .spring(response: 0.4, dampingFraction: 0.8)
-    }
-    
-    private func updateJobStatus(_ job: JobApplication, to status: ApplicationStatus) {
-        withAnimation(jobAnimation) {
-            var updatedJob = job
-            updatedJob.status = status.rawValue
-            do {
-                try database.write { db in
-                    try updatedJob.update(db)
-                }
-            } catch {
-                print("Failed to update job status in database")
-            }
-        }
-    }
-    
-    private func saveJob(_ job: JobApplication) {
-        withAnimation(jobAnimation) {
-            if store.jobApplications.firstIndex(where: { $0.id == job.id }) != nil {
-                // Update existing job
-                do {
-                    try database.write { db in
-                        try job.update(db)
-                    }
-                } catch {
-                    print("Failed to update job in database")
-                }
-            } else {
-                // Add new job
-                do {
-                    var newJob = job
-                    try database.write { db in
-                        try newJob.insert(db)
-                    }
-                } catch {
-                    print("Failed to insert new job to database")
-                }
-            }
-        }
-    }
-    
-    private func deleteJob(_ job: JobApplication) {
-        withAnimation(jobAnimation) {
-            do {
-                _ = try database.write { db in
-                    try job.delete(db)
-                }
-            } catch {
-                print("Failed to delete job in database")
-            }
-        }
-    }
-    
-    private func archiveJob(_ job: JobApplication) {
-        updateJobStatus(job, to: .archived)
-    }
-    
-    private func restoreJob(_ job: JobApplication) {
-        updateJobStatus(job, to: .applied)
-    }
-    
-    private func setDeleteJobConfirmationDialog() {
-//        destination = .confirmationDialog("Are you sure you want to delete this job application?")
     }
     
     // MARK: - Main Body
@@ -104,7 +39,7 @@ public struct JobsListView: View {
                     store: store,
                     onSave: { savedJob in
                         if let savedJob {
-                            saveJob(savedJob)
+                            self.store.send(.saveJob(job: savedJob), animation: jobAnimation)
                         }
                     }
                 )
@@ -189,7 +124,7 @@ public struct JobsListView: View {
     private func trailingSwipeActions(for job: JobApplication) -> some View {
         Group {
             Button(role: .destructive) {
-                setDeleteJobConfirmationDialog()
+                store.send(.onDeleteButtonTapped(job))
             } label: {
                 Label("Delete", systemImage: "trash")
             }
@@ -207,14 +142,14 @@ public struct JobsListView: View {
         Group {
             if isArchived {
                 Button {
-                    restoreJob(job)
+                    store.send(.updateJobStatus(job: job, status: .applied), animation: jobAnimation)
                 } label: {
                     Label("Restore", systemImage: "arrow.uturn.left")
                 }
                 .tint(.blue)
             } else {
                 Button {
-                    archiveJob(job)
+                    store.send(.updateJobStatus(job: job, status: .archived), animation: jobAnimation)
                 } label: {
                     Label("Archive", systemImage: "archivebox")
                 }
@@ -336,6 +271,8 @@ struct JobsListLogic: Reducer {
         case onEditButtonTapped(JobApplication)
         case onAddApplicationTapped
         case onDeleteButtonTapped(JobApplication)
+        case updateJobStatus(job: JobApplication, status: ApplicationStatus)
+        case saveJob(job: JobApplication)
         
         case alert(PresentationAction<Alert>)
         @CasePathable
@@ -352,8 +289,12 @@ struct JobsListLogic: Reducer {
             switch action {
             case .alert(.presented(.confirmDeleteJob)):
                 state.alert = nil
-                // TODO: Delete job
-                return .none
+                return .run { [jobApplication = state.jobApplication] _ in
+                    precondition(jobApplication != nil, "How can this even be nil at this point?")
+                    _ = try database.write { db in
+                        try jobApplication!.delete(db)
+                    }
+                }
                 
             case .toggleViewMode:
                 state.viewMode = state.viewMode == .full ? .compact : .full
@@ -382,6 +323,34 @@ struct JobsListLogic: Reducer {
                     }
                 }
                 return .none
+                
+            case let .updateJobStatus(job: job, status: status):
+                return .run { _ in
+                    var updatedJob = job
+                    updatedJob.status = status.rawValue
+                    
+                    try database.write { db in
+                        try updatedJob.update(db)
+                    }
+                }
+                
+            case let .saveJob(job: job):
+                return .run { [jobApplications = state.jobApplications] _ in
+                    
+                    guard jobApplications.firstIndex(where: { $0.id == job.id }) != nil else {
+                        // Add new job
+                        var newJob = job
+                        try database.write { db in
+                            try newJob.insert(db)
+                        }
+                        return
+                    }
+                    
+                    // Update existing job
+                    try database.write { db in
+                        try job.update(db)
+                    }
+                }
                 
             case .binding, .destination, .alert:
                 return .none
