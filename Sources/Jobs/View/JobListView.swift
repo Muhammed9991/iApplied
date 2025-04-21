@@ -236,12 +236,18 @@ public struct JobsListView: View {
 // MARK: - Preview
 
 #Preview {
-    JobsListView(
-        store: Store(
-            initialState: JobsListLogic.State(),
-            reducer: { JobsListLogic() }
+    _ = try! prepareDependencies {
+        $0.defaultDatabase = try appDatabase()
+    }
+    
+    return NavigationStack {
+        JobsListView(
+            store: Store(
+                initialState: JobsListLogic.State(),
+                reducer: { JobsListLogic() }
+            )
         )
-    )
+    }
 }
 
 // MARK: - Reducer
