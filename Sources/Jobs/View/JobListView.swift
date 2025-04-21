@@ -272,6 +272,7 @@ public struct JobsListLogic: Reducer, Sendable {
         case onDeleteButtonTapped(JobApplication)
         case updateJobStatus(job: JobApplication, status: ApplicationStatus)
         case saveJob(job: JobApplication)
+        case scheduleNotification(JobApplication)
         
         case alert(PresentationAction<Alert>)
         @CasePathable
@@ -281,7 +282,8 @@ public struct JobsListLogic: Reducer, Sendable {
     }
     
     @Dependency(\.defaultDatabase) var database
-
+    @Dependency(NotificationManager.self) var notificationManager
+    
     public var body: some Reducer<State, Action> {
         BindingReducer()
         Reduce<State, Action> { state, action in
@@ -292,6 +294,10 @@ public struct JobsListLogic: Reducer, Sendable {
                     precondition(jobApplication != nil, "How can this even be nil at this point?")
                     _ = try database.write { db in
                         try jobApplication!.delete(db)
+                    }
+                    
+                    if let id = jobApplication?.id {
+                        notificationManager.cancelNotification("\(id)")
                     }
                 }
                 
@@ -325,30 +331,45 @@ public struct JobsListLogic: Reducer, Sendable {
                 
             case let .updateJobStatus(job: job, status: status):
                 return .run { _ in
-                    var updatedJob = job
-                    updatedJob.status = status.rawValue
                     
-                    try database.write { db in
+                    try await database.write { db in
+                        var updatedJob = job
+                        updatedJob.status = status.rawValue
                         try updatedJob.update(db)
                     }
+                    
+                    if let id = job.id, status == .declined || status == .archived {
+                        notificationManager.cancelNotification("\(id)")
+                    }
+                    
+                    let wasArchived = job.status == ApplicationStatus.archived.rawValue
+                    
+                    if wasArchived { try await notificationManager.scheduleFollowUpNotification(job) }
                 }
                 
             case let .saveJob(job: job):
-                return .run { [jobApplications = state.jobApplications] _ in
+                return .run { [jobApplications = state.jobApplications] send in
                     
                     guard jobApplications.firstIndex(where: { $0.id == job.id }) != nil else {
                         // Add new job
-                        var newJob = job
-                        try database.write { db in
+                        try await database.write { db in
+                            var newJob = job
                             try newJob.insert(db)
                         }
+                        await send(.scheduleNotification(job))
                         return
                     }
                     
                     // Update existing job
-                    try database.write { db in
+                    try await database.write { db in
                         try job.update(db)
                     }
+                    await send(.scheduleNotification(job))
+                }
+                
+            case let .scheduleNotification(jobApplication):
+                return .run { _ in
+                    try await notificationManager.scheduleFollowUpNotification(jobApplication)
                 }
                 
             case let .destination(.presented(.jobForm(.delegate(.onSaveButtonTapped(job))))):
