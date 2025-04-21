@@ -25,7 +25,7 @@ struct JobFormView: View {
         _title = State(initialValue: job?.title ?? "")
         _company = State(initialValue: job?.company ?? "")
         _dateApplied = State(initialValue: job?.dateApplied ?? Date())
-        _status = State(initialValue: job?.status ?? .applied)
+        _status = State(initialValue: ApplicationStatus.toApplicationStatus(from: job?.status ?? ApplicationStatus.applied.rawValue))
         _notes = State(initialValue: job?.notes ?? "")
     }
 
@@ -89,11 +89,11 @@ struct JobFormView: View {
                         guard !title.isEmpty, !company.isEmpty else { return }
 
                         let updatedJob = JobApplication(
-                            id: originalJob?.id ?? UUID(),
+                            id: originalJob?.id ?? 1,
                             title: title,
                             company: company,
                             dateApplied: dateApplied,
-                            status: status,
+                            status: status.rawValue,
                             notes: notes.isEmpty ? nil : notes,
                             lastFollowUpDate: originalJob?.lastFollowUpDate
                         )

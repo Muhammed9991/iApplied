@@ -1,5 +1,6 @@
 //  Created by Muhammed Mahmood on 19/04/2025.
 
+import SharingGRDB
 import SwiftUI
 import SwiftUINavigation
 import Theme
@@ -11,7 +12,10 @@ enum Destination {
 }
 
 public struct JobsListView: View {
-    @State private var jobApplications: [JobApplication] = [.mock]
+    @SharedReader(.fetchAll(sql: "SELECT * FROM jobApplications")) var jobApplications: [JobApplication]
+    
+    @Dependency(\.defaultDatabase) var database
+
     @State private var viewMode: ViewMode = .compact
     @State private var isCompact: Bool = true
     @State private var jobApplication: JobApplication?
@@ -34,29 +38,52 @@ public struct JobsListView: View {
     
     private func updateJobStatus(_ job: JobApplication, to status: ApplicationStatus) {
         withAnimation(jobAnimation) {
-            if let index = jobApplications.firstIndex(where: { $0.id == job.id }) {
-                var updatedJob = job
-                updatedJob.status = status
-                jobApplications[index] = updatedJob
+            var updatedJob = job
+            updatedJob.status = status.rawValue
+            do {
+                try database.write { db in
+                    try updatedJob.update(db)
+                }
+            } catch {
+                print("Failed to update job status in database")
             }
         }
     }
     
     private func saveJob(_ job: JobApplication) {
         withAnimation(jobAnimation) {
-            if let index = jobApplications.firstIndex(where: { $0.id == job.id }) {
+            if jobApplications.firstIndex(where: { $0.id == job.id }) != nil {
                 // Update existing job
-                jobApplications[index] = job
+                do {
+                    try database.write { db in
+                        try job.update(db)
+                    }
+                } catch {
+                    print("Failed to update job in database")
+                }
             } else {
                 // Add new job
-                jobApplications.append(job)
+                do {
+                    var newJob = job
+                    try database.write { db in
+                        try newJob.insert(db)
+                    }
+                } catch {
+                    print("Failed to insert new job to database")
+                }
             }
         }
     }
     
     private func deleteJob(_ job: JobApplication) {
         withAnimation(jobAnimation) {
-            jobApplications.removeAll { $0.id == job.id }
+            do {
+                _ = try database.write { db in
+                    try job.delete(db)
+                }
+            } catch {
+                print("Failed to delete job in database")
+            }
         }
     }
     
@@ -101,7 +128,7 @@ public struct JobsListView: View {
             }
             .sheet(item: $destination.jobForm, id: \.self) { job in
                 JobFormView(job: job) { savedJob in
-                    if let savedJob = savedJob {
+                    if let savedJob {
                         saveJob(savedJob)
                     }
                     destination = nil
@@ -260,11 +287,11 @@ public struct JobsListView: View {
     // MARK: - Computed Properties
     
     private var activeJobs: [JobApplication] {
-        jobApplications.filter { $0.status != .archived }
+        jobApplications.filter { $0.status != ApplicationStatus.archived.rawValue }
     }
     
     private var archivedJobs: [JobApplication] {
-        jobApplications.filter { $0.status == .archived }
+        jobApplications.filter { $0.status == ApplicationStatus.archived.rawValue }
     }
     
     private var hasArchivedJobs: Bool {

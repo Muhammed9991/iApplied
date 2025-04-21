@@ -3,16 +3,17 @@
 import SwiftUI
 
 struct StatusBadgeView: View {
-    let status: ApplicationStatus
+    let status: String
+    var applicationStatus: ApplicationStatus { ApplicationStatus.toApplicationStatus(from: status) }
 
     var body: some View {
-        Text(status.rawValue)
+        Text(applicationStatus.rawValue)
             .font(.caption)
             .fontWeight(.medium)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(status.color.opacity(0.2))
-            .foregroundColor(status.color)
+            .background(applicationStatus.color.opacity(0.2))
+            .foregroundColor(applicationStatus.color)
             .cornerRadius(8)
     }
 }
