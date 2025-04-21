@@ -37,6 +37,7 @@ struct JobsListLogic: Reducer {
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
         case toggleViewMode
+        case onEditButtonTapped(JobApplication)
     }
     
     @Dependency(\.defaultDatabase) var database
@@ -45,10 +46,14 @@ struct JobsListLogic: Reducer {
         BindingReducer()
         Reduce<State, Action> { state, action in
             switch action {
-                
             case .toggleViewMode:
                 state.viewMode = state.viewMode == .full ? .compact : .full
                 state.isCompact = state.viewMode == .compact
+                return .none
+                
+            case let .onEditButtonTapped(jobApplication):
+                state.jobApplication = jobApplication
+                state.destination = .jobForm(JobFormLogic.State(jobApplication: jobApplication))
                 return .none
                 
             case .binding, .destination:
@@ -64,7 +69,6 @@ public struct JobsListView: View {
     
     @Dependency(\.defaultDatabase) var database
 
-    @State private var jobApplication: JobApplication?
     @State var destination: Destination?
     
     /// Animation configuration used across job-related actions
@@ -159,13 +163,15 @@ public struct JobsListView: View {
             } actions: { _ in
                 deleteConfirmationButtons
             }
-            .sheet(item: $destination.jobForm, id: \.self) { job in
-                JobFormView(job: job) { savedJob in
-                    if let savedJob {
-                        saveJob(savedJob)
+            .sheet(item: $store.scope(state: \.destination?.jobForm, action: \.destination.jobForm)) { store in
+                JobFormView(
+                    store: store,
+                    onSave: { savedJob in
+                        if let savedJob {
+                            saveJob(savedJob)
+                        }
                     }
-                    destination = nil
-                }
+                )
                 .interactiveDismissDisabled()
             }
         }
@@ -216,11 +222,11 @@ public struct JobsListView: View {
             job: job,
             isCompact: $store.isCompact,
             onEdit: {
-                jobApplication = job
+                store.jobApplication = job
                 destination = .jobForm(job)
             },
             onDelete: {
-                jobApplication = job
+                store.jobApplication = job
                 destination = .confirmationDialog("Are you sure you want to delete this job application?")
             }
         )
@@ -229,7 +235,7 @@ public struct JobsListView: View {
         .listRowSeparator(.hidden)
         .contentShape(Rectangle())
         .onTapGesture {
-            jobApplication = job
+            store.jobApplication = job
             destination = .jobForm(job)
         }
         .transition(.opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .trailing)))
@@ -282,7 +288,7 @@ public struct JobsListView: View {
     private var deleteConfirmationButtons: some View {
         Group {
             Button("Delete", role: .destructive) {
-                if let job = jobApplication {
+                if let job = store.jobApplication {
                     withAnimation {
                         deleteJob(job)
                         destination = nil
@@ -309,7 +315,7 @@ public struct JobsListView: View {
     private var trailingToolbarItems: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
             Button {
-                destination = .jobForm(jobApplication)
+                destination = .jobForm(store.jobApplication)
             } label: {
                 Image(systemName: "plus")
                     .fontWeight(.semibold)
@@ -353,7 +359,7 @@ public struct JobsListView: View {
     
     private var addApplicationButton: some View {
         Button {
-            destination = .jobForm(jobApplication)
+            destination = .jobForm(store.jobApplication)
         } label: {
             Text("Add Application")
                 .font(.headline)

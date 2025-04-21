@@ -8,7 +8,7 @@ import Theme
 struct JobFormLogic: Reducer {
     @ObservableState
     struct State: Equatable, Sendable {
-        var originalJob: JobApplication?
+        var jobApplication: JobApplication?
         var title: String
         var company: String
         var dateApplied: Date
@@ -35,31 +35,21 @@ struct JobFormLogic: Reducer {
     }
 }
 
+extension JobFormLogic.State {
+    init(jobApplication: JobApplication? = nil) {
+        self.jobApplication = jobApplication
+        self.title = jobApplication?.title ?? ""
+        self.company = jobApplication?.company ?? ""
+        self.dateApplied = jobApplication?.dateApplied ?? Date()
+        self.status = ApplicationStatus.toApplicationStatus(from: jobApplication?.status ?? ApplicationStatus.applied.rawValue)
+        self.notes = jobApplication?.notes ?? ""
+    }
+}
+
 struct JobFormView: View {
     @Environment(\.dismiss) private var dismiss
-
-    private var originalJob: JobApplication?
-    @State private var title: String
-    @State private var company: String
-    @State private var dateApplied: Date
-    @State private var status: ApplicationStatus
-    @State private var notes: String
-
-    @State private var titleHasError: Bool = false
-    @State private var companyHasError: Bool = false
-    @State private var showValidationErrors: Bool = false
-
-    private var onSave: (JobApplication?) -> Void
-
-    init(job: JobApplication?, onSave: @escaping (JobApplication?) -> Void) {
-        self.originalJob = job
-        self.onSave = onSave
-        _title = State(initialValue: job?.title ?? "")
-        _company = State(initialValue: job?.company ?? "")
-        _dateApplied = State(initialValue: job?.dateApplied ?? Date())
-        _status = State(initialValue: ApplicationStatus.toApplicationStatus(from: job?.status ?? ApplicationStatus.applied.rawValue))
-        _notes = State(initialValue: job?.notes ?? "")
-    }
+    @Bindable var store: StoreOf<JobFormLogic>
+    var onSave: (JobApplication?) -> Void
 
     var body: some View {
         NavigationStack {
@@ -67,20 +57,20 @@ struct JobFormView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     SectionHeader("Job Details")
 
-                    ValidatedTextField(title: "Job Title", text: $title, hasError: $titleHasError, isRequired: true)
-                    ValidatedTextField(title: "Company", text: $company, hasError: $companyHasError, isRequired: true)
+                    ValidatedTextField(title: "Job Title", text: $store.title, hasError: $store.titleHasError, isRequired: true)
+                    ValidatedTextField(title: "Company", text: $store.company, hasError: $store.companyHasError, isRequired: true)
                     VStack(alignment: .leading, spacing: 16) {
                         HStack(spacing: 8) {
                             Text("Date Applied")
                                 .font(.headline)
-                            DatePicker("", selection: $dateApplied, displayedComponents: .date)
+                            DatePicker("", selection: $store.dateApplied, displayedComponents: .date)
                                 .labelsHidden()
                         }
 
                         HStack(spacing: 8) {
                             Text("Status")
                                 .font(.headline)
-                            Picker("", selection: $status) {
+                            Picker("", selection: $store.status) {
                                 ForEach(ApplicationStatus.allCases.filter { $0 != .archived }, id: \.self) { status in
                                     Text(status.rawValue.capitalized)
                                 }
@@ -92,7 +82,7 @@ struct JobFormView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         SectionHeader("Notes")
 
-                        TextEditor(text: $notes)
+                        TextEditor(text: $store.notes)
                             .padding(10)
                             .frame(minHeight: 150)
                             .overlay(
@@ -104,7 +94,7 @@ struct JobFormView: View {
                 .padding(.horizontal)
             }
             .scrollDismissesKeyboard(.interactively)
-            .navigationTitle(originalJob == nil ? "Add Application" : "Edit Application")
+            .navigationTitle(store.jobApplication == nil ? "Add Application" : "Edit Application")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -114,22 +104,23 @@ struct JobFormView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        titleHasError = title.isEmpty
-                        companyHasError = company.isEmpty
-                        showValidationErrors = true
+                        store.titleHasError = store.title.isEmpty
+                        store.companyHasError = store.company.isEmpty
+                        store.showValidationErrors = true
 
-                        guard !title.isEmpty, !company.isEmpty else { return }
+                        guard !store.title.isEmpty, !store.company.isEmpty else { return }
 
                         let updatedJob = JobApplication(
-                            id: originalJob?.id ?? 1,
-                            title: title,
-                            company: company,
-                            dateApplied: dateApplied,
-                            status: status.rawValue,
-                            notes: notes.isEmpty ? nil : notes,
-                            lastFollowUpDate: originalJob?.lastFollowUpDate
+                            id: store.jobApplication?.id ?? 1,
+                            title: store.title,
+                            company: store.company,
+                            dateApplied: store.dateApplied,
+                            status: store.status.rawValue,
+                            notes: store.notes.isEmpty ? nil : store.notes,
+                            lastFollowUpDate: store.jobApplication?.lastFollowUpDate
                         )
                         onSave(updatedJob)
+                        dismiss()
                     }
                 }
             }
@@ -186,5 +177,11 @@ private struct SectionHeader: View {
 }
 
 #Preview {
-    JobFormView(job: JobApplication.mock) { _ in }
+    JobFormView(
+        store: Store(
+            initialState: JobFormLogic.State(jobApplication: nil),
+            reducer: { JobFormLogic() }
+        ),
+        onSave: { _ in }
+    )
 }
