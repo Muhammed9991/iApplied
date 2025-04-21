@@ -4,48 +4,6 @@ import ComposableArchitecture
 import SwiftUI
 import Theme
 
-@Reducer
-struct JobFormLogic: Reducer {
-    @ObservableState
-    struct State: Equatable, Sendable {
-        var jobApplication: JobApplication?
-        var title: String
-        var company: String
-        var dateApplied: Date
-        var status: ApplicationStatus
-        var notes: String
-
-        var titleHasError: Bool = false
-        var companyHasError: Bool = false
-        var showValidationErrors: Bool = false
-    }
-
-    enum Action: Equatable, Sendable, BindableAction {
-        case binding(BindingAction<State>)
-    }
-
-    var body: some Reducer<State, Action> {
-        BindingReducer()
-        Reduce<State, Action> { _, action in
-            switch action {
-            case .binding:
-                .none
-            }
-        }
-    }
-}
-
-extension JobFormLogic.State {
-    init(jobApplication: JobApplication? = nil) {
-        self.jobApplication = jobApplication
-        self.title = jobApplication?.title ?? ""
-        self.company = jobApplication?.company ?? ""
-        self.dateApplied = jobApplication?.dateApplied ?? Date()
-        self.status = ApplicationStatus.toApplicationStatus(from: jobApplication?.status ?? ApplicationStatus.applied.rawValue)
-        self.notes = jobApplication?.notes ?? ""
-    }
-}
-
 struct JobFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var store: StoreOf<JobFormLogic>
@@ -176,6 +134,8 @@ private struct SectionHeader: View {
     }
 }
 
+// MARK: - Preview
+
 #Preview {
     JobFormView(
         store: Store(
@@ -184,4 +144,48 @@ private struct SectionHeader: View {
         ),
         onSave: { _ in }
     )
+}
+
+// MARK: - Reducer
+
+@Reducer
+struct JobFormLogic: Reducer {
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var jobApplication: JobApplication?
+        var title: String
+        var company: String
+        var dateApplied: Date
+        var status: ApplicationStatus
+        var notes: String
+
+        var titleHasError: Bool = false
+        var companyHasError: Bool = false
+        var showValidationErrors: Bool = false
+    }
+
+    enum Action: Equatable, Sendable, BindableAction {
+        case binding(BindingAction<State>)
+    }
+
+    var body: some Reducer<State, Action> {
+        BindingReducer()
+        Reduce<State, Action> { _, action in
+            switch action {
+            case .binding:
+                .none
+            }
+        }
+    }
+}
+
+extension JobFormLogic.State {
+    init(jobApplication: JobApplication? = nil) {
+        self.jobApplication = jobApplication
+        self.title = jobApplication?.title ?? ""
+        self.company = jobApplication?.company ?? ""
+        self.dateApplied = jobApplication?.dateApplied ?? Date()
+        self.status = ApplicationStatus.toApplicationStatus(from: jobApplication?.status ?? ApplicationStatus.applied.rawValue)
+        self.notes = jobApplication?.notes ?? ""
+    }
 }

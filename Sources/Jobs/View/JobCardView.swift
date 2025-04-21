@@ -4,29 +4,6 @@ import ComposableArchitecture
 import SwiftUI
 import Theme
 
-@Reducer
-struct JobCardLogic: Reducer {
-    @ObservableState
-    struct State: Equatable, Sendable {
-        var job: JobApplication
-        var isCompact: Bool = true
-    }
-    
-    enum Action: Equatable, Sendable, BindableAction {
-        case binding(BindingAction<State>)
-    }
-    
-    var body: some Reducer<State, Action> {
-        BindingReducer()
-        Reduce<State, Action> { _, action in
-            switch action {
-            case .binding:
-                .none
-            }
-        }
-    }
-}
-
 struct JobCardView: View {
     let job: JobApplication
     @Binding var isCompact: Bool
@@ -92,6 +69,8 @@ struct JobCardView: View {
     }
 }
 
+// MARK: - Preview
+
 #Preview {
     VStack(spacing: 20) {
         Text("Normal")
@@ -113,4 +92,29 @@ struct JobCardView: View {
         )
     }
     .padding()
+}
+
+// MARK: - Reducer
+
+@Reducer
+struct JobCardLogic: Reducer {
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var job: JobApplication
+        var isCompact: Bool = true
+    }
+    
+    enum Action: Equatable, Sendable, BindableAction {
+        case binding(BindingAction<State>)
+    }
+    
+    var body: some Reducer<State, Action> {
+        BindingReducer()
+        Reduce<State, Action> { _, action in
+            switch action {
+            case .binding:
+                .none
+            }
+        }
+    }
 }

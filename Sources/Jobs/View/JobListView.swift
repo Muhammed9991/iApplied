@@ -6,97 +6,6 @@ import SwiftUI
 import SwiftUINavigation
 import Theme
 
-@CasePathable
-enum Destination {
-    case confirmationDialog(String)
-    case jobForm(JobApplication?)
-}
-
-@Reducer
-struct JobsListLogic: Reducer {
-    @Reducer(state: .equatable, action: .equatable)
-    enum Destination {
-        case jobForm(JobFormLogic)
-    }
-    
-    @ObservableState
-    struct State: Equatable, Sendable {
-        @SharedReader(.fetchAll(sql: "SELECT * FROM jobApplications")) var jobApplications: [JobApplication]
-        var isCompact: Bool = true
-        var jobApplication: JobApplication?
-        @Presents var destination: Destination.State?
-        @Presents var alert: AlertState<Action.Alert>?
-        
-        var viewMode: ViewMode = .compact
-        enum ViewMode: Equatable, Sendable {
-            case full
-            case compact
-        }
-    }
-
-    enum Action: Equatable, Sendable, BindableAction {
-        case binding(BindingAction<State>)
-        case destination(PresentationAction<Destination.Action>)
-        case toggleViewMode
-        case onEditButtonTapped(JobApplication)
-        case onAddApplicationTapped
-        case onDeleteButtonTapped(JobApplication)
-        
-        case alert(PresentationAction<Alert>)
-        @CasePathable
-        enum Alert {
-            case confirmDeleteJob
-        }
-    }
-    
-    @Dependency(\.defaultDatabase) var database
-
-    var body: some Reducer<State, Action> {
-        BindingReducer()
-        Reduce<State, Action> { state, action in
-            switch action {
-            case .alert(.presented(.confirmDeleteJob)):
-                state.alert = nil
-                // TODO: Delete job
-                return .none
-                
-            case .toggleViewMode:
-                state.viewMode = state.viewMode == .full ? .compact : .full
-                state.isCompact = state.viewMode == .compact
-                return .none
-                
-            case let .onEditButtonTapped(jobApplication):
-                state.jobApplication = jobApplication
-                state.destination = .jobForm(JobFormLogic.State(jobApplication: jobApplication))
-                return .none
-                
-            case .onAddApplicationTapped:
-                state.destination = .jobForm(JobFormLogic.State())
-                return .none
-                
-            case let .onDeleteButtonTapped(jobApplication):
-                state.jobApplication = jobApplication
-                state.alert = AlertState {
-                    TextState("Are you sure you want to delete this job application?")
-                } actions: {
-                    ButtonState(role: .cancel) {
-                        TextState("Cancel")
-                    }
-                    ButtonState(role: .destructive, action: .confirmDeleteJob) {
-                        TextState("Delete")
-                    }
-                }
-                return .none
-                
-            case .binding, .destination, .alert:
-                return .none
-            }
-        }
-        .ifLet(\.$destination, action: \.destination)
-        .ifLet(\.$alert, action: \.alert)
-    }
-}
-
 public struct JobsListView: View {
     @Bindable var store: StoreOf<JobsListLogic>
     
@@ -389,4 +298,91 @@ public struct JobsListView: View {
             reducer: { JobsListLogic() }
         )
     )
+}
+
+// MARK: - Reducer
+
+@Reducer
+struct JobsListLogic: Reducer {
+    @Reducer(state: .equatable, action: .equatable)
+    enum Destination {
+        case jobForm(JobFormLogic)
+    }
+    
+    @ObservableState
+    struct State: Equatable, Sendable {
+        @SharedReader(.fetchAll(sql: "SELECT * FROM jobApplications")) var jobApplications: [JobApplication]
+        var isCompact: Bool = true
+        var jobApplication: JobApplication?
+        @Presents var destination: Destination.State?
+        @Presents var alert: AlertState<Action.Alert>?
+        
+        var viewMode: ViewMode = .compact
+        enum ViewMode: Equatable, Sendable {
+            case full
+            case compact
+        }
+    }
+
+    enum Action: Equatable, Sendable, BindableAction {
+        case binding(BindingAction<State>)
+        case destination(PresentationAction<Destination.Action>)
+        case toggleViewMode
+        case onEditButtonTapped(JobApplication)
+        case onAddApplicationTapped
+        case onDeleteButtonTapped(JobApplication)
+        
+        case alert(PresentationAction<Alert>)
+        @CasePathable
+        enum Alert {
+            case confirmDeleteJob
+        }
+    }
+    
+    @Dependency(\.defaultDatabase) var database
+
+    var body: some Reducer<State, Action> {
+        BindingReducer()
+        Reduce<State, Action> { state, action in
+            switch action {
+            case .alert(.presented(.confirmDeleteJob)):
+                state.alert = nil
+                // TODO: Delete job
+                return .none
+                
+            case .toggleViewMode:
+                state.viewMode = state.viewMode == .full ? .compact : .full
+                state.isCompact = state.viewMode == .compact
+                return .none
+                
+            case let .onEditButtonTapped(jobApplication):
+                state.jobApplication = jobApplication
+                state.destination = .jobForm(JobFormLogic.State(jobApplication: jobApplication))
+                return .none
+                
+            case .onAddApplicationTapped:
+                state.destination = .jobForm(JobFormLogic.State())
+                return .none
+                
+            case let .onDeleteButtonTapped(jobApplication):
+                state.jobApplication = jobApplication
+                state.alert = AlertState {
+                    TextState("Are you sure you want to delete this job application?")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("Cancel")
+                    }
+                    ButtonState(role: .destructive, action: .confirmDeleteJob) {
+                        TextState("Delete")
+                    }
+                }
+                return .none
+                
+            case .binding, .destination, .alert:
+                return .none
+            }
+        }
+        .ifLet(\.$destination, action: \.destination)
+        .ifLet(\.$alert, action: \.alert)
+    }
 }
