@@ -58,7 +58,7 @@ public func appDatabase() throws -> any DatabaseWriter {
             let calendar = Calendar.current
 
             let applications: [(Date, String, String, String)] = [
-                (calendar.date(byAdding: .day, value: -14, to: currentDate)!, "iOS Developer", "Apple Inc.", "Applied"),
+                (calendar.date(byAdding: .minute, value: 1, to: currentDate)!, "iOS Developer", "Apple Inc.", "Applied"),
                 (calendar.date(byAdding: .day, value: -10, to: currentDate)!, "Senior Swift Developer", "Microsoft", "Interview"),
                 (calendar.date(byAdding: .day, value: -7, to: currentDate)!, "Mobile Engineer", "Google", "Offer"),
                 (calendar.date(byAdding: .day, value: -3, to: currentDate)!, "Software Engineer", "Meta", "Declined"),
