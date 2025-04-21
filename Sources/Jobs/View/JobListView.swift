@@ -15,7 +15,7 @@ public struct JobsListView: View {
         
     /// Animation configuration used across job-related actions
     private var jobAnimation: Animation {
-        .spring(response: 0.4, dampingFraction: 1)
+        .interactiveSpring(duration: 0.3, extraBounce: 0.3, blendDuration: 0.8)
     }
     
     // MARK: - Main Body
