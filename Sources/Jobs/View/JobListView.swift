@@ -25,6 +25,7 @@ struct JobsListLogic: Reducer {
         var isCompact: Bool = true
         var jobApplication: JobApplication?
         @Presents var destination: Destination.State?
+        @Presents var alert: AlertState<Action.Alert>?
         
         var viewMode: ViewMode = .compact
         enum ViewMode: Equatable, Sendable {
@@ -38,6 +39,14 @@ struct JobsListLogic: Reducer {
         case destination(PresentationAction<Destination.Action>)
         case toggleViewMode
         case onEditButtonTapped(JobApplication)
+        case onAddApplicationTapped
+        case onDeleteButtonTapped(JobApplication)
+        
+        case alert(PresentationAction<Alert>)
+        @CasePathable
+        enum Alert {
+            case confirmDeleteJob
+        }
     }
     
     @Dependency(\.defaultDatabase) var database
@@ -46,6 +55,11 @@ struct JobsListLogic: Reducer {
         BindingReducer()
         Reduce<State, Action> { state, action in
             switch action {
+            case .alert(.presented(.confirmDeleteJob)):
+                state.alert = nil
+                // TODO: Delete job
+                return .none
+                
             case .toggleViewMode:
                 state.viewMode = state.viewMode == .full ? .compact : .full
                 state.isCompact = state.viewMode == .compact
@@ -56,11 +70,30 @@ struct JobsListLogic: Reducer {
                 state.destination = .jobForm(JobFormLogic.State(jobApplication: jobApplication))
                 return .none
                 
-            case .binding, .destination:
+            case .onAddApplicationTapped:
+                state.destination = .jobForm(JobFormLogic.State())
+                return .none
+                
+            case let .onDeleteButtonTapped(jobApplication):
+                state.jobApplication = jobApplication
+                state.alert = AlertState {
+                    TextState("Are you sure you want to delete this job application?")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("Cancel")
+                    }
+                    ButtonState(role: .destructive, action: .confirmDeleteJob) {
+                        TextState("Delete")
+                    }
+                }
+                return .none
+                
+            case .binding, .destination, .alert:
                 return .none
             }
         }
         .ifLet(\.$destination, action: \.destination)
+        .ifLet(\.$alert, action: \.alert)
     }
 }
 
@@ -68,8 +101,6 @@ public struct JobsListView: View {
     @Bindable var store: StoreOf<JobsListLogic>
     
     @Dependency(\.defaultDatabase) var database
-
-    @State var destination: Destination?
     
     /// Animation configuration used across job-related actions
     private var jobAnimation: Animation {
@@ -136,7 +167,7 @@ public struct JobsListView: View {
     }
     
     private func setDeleteJobConfirmationDialog() {
-        destination = .confirmationDialog("Are you sure you want to delete this job application?")
+//        destination = .confirmationDialog("Are you sure you want to delete this job application?")
     }
     
     // MARK: - Main Body
@@ -158,11 +189,7 @@ public struct JobsListView: View {
                 leadingToolbarItems
                 trailingToolbarItems
             }
-            .alert(item: $destination.confirmationDialog) { text in
-                Text(text)
-            } actions: { _ in
-                deleteConfirmationButtons
-            }
+            .alert($store.scope(state: \.alert, action: \.alert))
             .sheet(item: $store.scope(state: \.destination?.jobForm, action: \.destination.jobForm)) { store in
                 JobFormView(
                     store: store,
@@ -222,12 +249,10 @@ public struct JobsListView: View {
             job: job,
             isCompact: $store.isCompact,
             onEdit: {
-                store.jobApplication = job
-                destination = .jobForm(job)
+                store.send(.onEditButtonTapped(job))
             },
             onDelete: {
-                store.jobApplication = job
-                destination = .confirmationDialog("Are you sure you want to delete this job application?")
+                store.send(.onDeleteButtonTapped(job))
             }
         )
         .listRowInsets(EdgeInsets())
@@ -235,8 +260,7 @@ public struct JobsListView: View {
         .listRowSeparator(.hidden)
         .contentShape(Rectangle())
         .onTapGesture {
-            store.jobApplication = job
-            destination = .jobForm(job)
+            store.send(.onEditButtonTapped(job))
         }
         .transition(.opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .trailing)))
         .id(job.id)
@@ -257,7 +281,7 @@ public struct JobsListView: View {
             }
             
             Button {
-                destination = .jobForm(job)
+                store.send(.onEditButtonTapped(job))
             } label: {
                 Label("Edit", systemImage: "pencil")
             }
@@ -285,23 +309,6 @@ public struct JobsListView: View {
         }
     }
     
-    private var deleteConfirmationButtons: some View {
-        Group {
-            Button("Delete", role: .destructive) {
-                if let job = store.jobApplication {
-                    withAnimation {
-                        deleteJob(job)
-                        destination = nil
-                    }
-                }
-            }
-            
-            Button("Cancel", role: .cancel) {
-                destination = nil
-            }
-        }
-    }
-    
     private var leadingToolbarItems: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
             Button {
@@ -315,7 +322,7 @@ public struct JobsListView: View {
     private var trailingToolbarItems: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
             Button {
-                destination = .jobForm(store.jobApplication)
+                store.send(.onAddApplicationTapped)
             } label: {
                 Image(systemName: "plus")
                     .fontWeight(.semibold)
@@ -359,7 +366,7 @@ public struct JobsListView: View {
     
     private var addApplicationButton: some View {
         Button {
-            destination = .jobForm(store.jobApplication)
+            store.send(.onAddApplicationTapped)
         } label: {
             Text("Add Application")
                 .font(.headline)
