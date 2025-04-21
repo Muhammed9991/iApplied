@@ -149,9 +149,9 @@ private struct SectionHeader: View {
 // MARK: - Reducer
 
 @Reducer
-struct JobFormLogic: Reducer {
+public struct JobFormLogic: Reducer {
     @ObservableState
-    struct State: Equatable, Sendable {
+    public struct State: Equatable, Sendable {
         var jobApplication: JobApplication?
         var title: String
         var company: String
@@ -164,11 +164,11 @@ struct JobFormLogic: Reducer {
         var showValidationErrors: Bool = false
     }
 
-    enum Action: Equatable, Sendable, BindableAction {
+    public enum Action: Equatable, Sendable, BindableAction {
         case binding(BindingAction<State>)
     }
 
-    var body: some Reducer<State, Action> {
+    public var body: some Reducer<State, Action> {
         BindingReducer()
         Reduce<State, Action> { _, action in
             switch action {

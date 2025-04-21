@@ -8,10 +8,14 @@ import Theme
 
 public struct JobsListView: View {
     @Bindable var store: StoreOf<JobsListLogic>
+    
+    public init(store: StoreOf<JobsListLogic>) {
+        self.store = store
+    }
         
     /// Animation configuration used across job-related actions
     private var jobAnimation: Animation {
-        .spring(response: 0.4, dampingFraction: 0.8)
+        .spring(response: 0.4, dampingFraction: 1)
     }
     
     // MARK: - Main Body
@@ -161,7 +165,7 @@ public struct JobsListView: View {
     private var leadingToolbarItems: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
             Button {
-                store.send(.toggleViewMode)
+                store.send(.toggleViewMode, animation: jobAnimation)
             } label: {
                 Image(systemName: store.viewMode == .full ? "list.bullet" : "rectangle.grid.1x2")
             }
@@ -243,14 +247,16 @@ public struct JobsListView: View {
 // MARK: - Reducer
 
 @Reducer
-struct JobsListLogic: Reducer {
-    @Reducer(state: .equatable, action: .equatable)
-    enum Destination {
+public struct JobsListLogic: Reducer, Sendable {
+    public init() {}
+    
+    @Reducer(state: .equatable, .sendable, action: .equatable, .sendable)
+    public enum Destination {
         case jobForm(JobFormLogic)
     }
     
     @ObservableState
-    struct State: Equatable, Sendable {
+    public struct State: Equatable, Sendable {
         @SharedReader(.fetchAll(sql: "SELECT * FROM jobApplications")) var jobApplications: [JobApplication]
         var isCompact: Bool = true
         var jobApplication: JobApplication?
@@ -258,13 +264,13 @@ struct JobsListLogic: Reducer {
         @Presents var alert: AlertState<Action.Alert>?
         
         var viewMode: ViewMode = .compact
-        enum ViewMode: Equatable, Sendable {
+        public enum ViewMode: Equatable, Sendable {
             case full
             case compact
         }
     }
 
-    enum Action: Equatable, Sendable, BindableAction {
+    public enum Action: Equatable, Sendable, BindableAction {
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
         case toggleViewMode
@@ -276,14 +282,14 @@ struct JobsListLogic: Reducer {
         
         case alert(PresentationAction<Alert>)
         @CasePathable
-        enum Alert {
+        public enum Alert: Equatable, Sendable {
             case confirmDeleteJob
         }
     }
     
     @Dependency(\.defaultDatabase) var database
 
-    var body: some Reducer<State, Action> {
+    public var body: some Reducer<State, Action> {
         BindingReducer()
         Reduce<State, Action> { state, action in
             switch action {
@@ -358,5 +364,23 @@ struct JobsListLogic: Reducer {
         }
         .ifLet(\.$destination, action: \.destination)
         .ifLet(\.$alert, action: \.alert)
+    }
+}
+
+// MARK: JobsListLogic.State initialisers
+
+public extension JobsListLogic.State {
+    init(
+        isCompact: Bool = true,
+        jobApplication: JobApplication? = nil,
+        destination: JobsListLogic.Destination.State? = nil,
+        alert: AlertState<JobsListLogic.Action.Alert>? = nil,
+        viewMode: ViewMode = .compact
+    ) {
+        self.isCompact = isCompact
+        self.jobApplication = jobApplication
+        self.destination = destination
+        self.alert = alert
+        self.viewMode = viewMode
     }
 }
