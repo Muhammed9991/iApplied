@@ -1,102 +1,21 @@
 //  Created by Muhammed Mahmood on 19/04/2025.
 
+import ComposableArchitecture
 import SharingGRDB
 import SwiftUI
 import SwiftUINavigation
 import Theme
 
-@CasePathable
-enum Destination {
-    case confirmationDialog(String)
-    case jobForm(JobApplication?)
-}
-
 public struct JobsListView: View {
-    @SharedReader(.fetchAll(sql: "SELECT * FROM jobApplications")) var jobApplications: [JobApplication]
+    @Bindable var store: StoreOf<JobsListLogic>
     
-    @Dependency(\.defaultDatabase) var database
-
-    @State private var viewMode: ViewMode = .compact
-    @State private var isCompact: Bool = true
-    @State private var jobApplication: JobApplication?
-    @State var destination: Destination?
-    enum ViewMode {
-        case full
-        case compact
+    public init(store: StoreOf<JobsListLogic>) {
+        self.store = store
     }
-    
-    public init() {}
-    
-    private func toggleViewMode() {
-        viewMode = viewMode == .full ? .compact : .full
-    }
-    
+        
     /// Animation configuration used across job-related actions
     private var jobAnimation: Animation {
-        .spring(response: 0.4, dampingFraction: 0.8)
-    }
-    
-    private func updateJobStatus(_ job: JobApplication, to status: ApplicationStatus) {
-        withAnimation(jobAnimation) {
-            var updatedJob = job
-            updatedJob.status = status.rawValue
-            do {
-                try database.write { db in
-                    try updatedJob.update(db)
-                }
-            } catch {
-                print("Failed to update job status in database")
-            }
-        }
-    }
-    
-    private func saveJob(_ job: JobApplication) {
-        withAnimation(jobAnimation) {
-            if jobApplications.firstIndex(where: { $0.id == job.id }) != nil {
-                // Update existing job
-                do {
-                    try database.write { db in
-                        try job.update(db)
-                    }
-                } catch {
-                    print("Failed to update job in database")
-                }
-            } else {
-                // Add new job
-                do {
-                    var newJob = job
-                    try database.write { db in
-                        try newJob.insert(db)
-                    }
-                } catch {
-                    print("Failed to insert new job to database")
-                }
-            }
-        }
-    }
-    
-    private func deleteJob(_ job: JobApplication) {
-        withAnimation(jobAnimation) {
-            do {
-                _ = try database.write { db in
-                    try job.delete(db)
-                }
-            } catch {
-                print("Failed to delete job in database")
-            }
-        }
-    }
-    
-    private func archiveJob(_ job: JobApplication) {
-        updateJobStatus(job, to: .archived)
-    }
-    
-    private func restoreJob(_ job: JobApplication) {
-        updateJobStatus(job, to: .applied)
-    }
-    
-    private func setDeleteJobConfirmationDialog() {
-        destination = .confirmationDialog("Are you sure you want to delete this job application?")
+        .interactiveSpring(duration: 0.3, extraBounce: 0.3, blendDuration: 0.8)
     }
     
     // MARK: - Main Body
@@ -107,33 +26,21 @@ public struct JobsListView: View {
                 AppColors.background
                     .ignoresSafeArea()
                 
-                if jobApplications.isEmpty {
+                if store.jobApplications.isEmpty {
                     emptyStateView
                 } else {
                     jobListContent
                 }
-            }
-            .onChange(of: viewMode) { _, newValue in
-                isCompact = newValue == .compact
             }
             .navigationTitle("Applications")
             .toolbar {
                 leadingToolbarItems
                 trailingToolbarItems
             }
-            .alert(item: $destination.confirmationDialog) { text in
-                Text(text)
-            } actions: { _ in
-                deleteConfirmationButtons
-            }
-            .sheet(item: $destination.jobForm, id: \.self) { job in
-                JobFormView(job: job) { savedJob in
-                    if let savedJob {
-                        saveJob(savedJob)
-                    }
-                    destination = nil
-                }
-                .interactiveDismissDisabled()
+            .alert($store.scope(state: \.alert, action: \.alert))
+            .sheet(item: $store.scope(state: \.destination?.jobForm, action: \.destination.jobForm)) { store in
+                JobFormView(store: store)
+                    .interactiveDismissDisabled()
             }
         }
     }
@@ -180,24 +87,20 @@ public struct JobsListView: View {
     
     private func jobCardView(for job: JobApplication, isArchived: Bool) -> some View {
         JobCardView(
-            job: job,
-            isCompact: $isCompact,
-            onEdit: {
-                jobApplication = job
-                destination = .jobForm(job)
-            },
-            onDelete: {
-                jobApplication = job
-                destination = .confirmationDialog("Are you sure you want to delete this job application?")
-            }
+            store: Store(
+                initialState: JobCardLogic.State(
+                    job: job,
+                    isCompact: store.isCompact
+                ),
+                reducer: { JobCardLogic() }
+            )
         )
         .listRowInsets(EdgeInsets())
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
         .contentShape(Rectangle())
         .onTapGesture {
-            jobApplication = job
-            destination = .jobForm(job)
+            store.send(.onEditButtonTapped(job))
         }
         .transition(.opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .trailing)))
         .id(job.id)
@@ -212,13 +115,13 @@ public struct JobsListView: View {
     private func trailingSwipeActions(for job: JobApplication) -> some View {
         Group {
             Button(role: .destructive) {
-                setDeleteJobConfirmationDialog()
+                store.send(.onDeleteButtonTapped(job))
             } label: {
                 Label("Delete", systemImage: "trash")
             }
             
             Button {
-                destination = .jobForm(job)
+                store.send(.onEditButtonTapped(job))
             } label: {
                 Label("Edit", systemImage: "pencil")
             }
@@ -230,14 +133,14 @@ public struct JobsListView: View {
         Group {
             if isArchived {
                 Button {
-                    restoreJob(job)
+                    store.send(.updateJobStatus(job: job, status: .applied), animation: jobAnimation)
                 } label: {
                     Label("Restore", systemImage: "arrow.uturn.left")
                 }
                 .tint(.blue)
             } else {
                 Button {
-                    archiveJob(job)
+                    store.send(.updateJobStatus(job: job, status: .archived), animation: jobAnimation)
                 } label: {
                     Label("Archive", systemImage: "archivebox")
                 }
@@ -246,29 +149,12 @@ public struct JobsListView: View {
         }
     }
     
-    private var deleteConfirmationButtons: some View {
-        Group {
-            Button("Delete", role: .destructive) {
-                if let job = jobApplication {
-                    withAnimation {
-                        deleteJob(job)
-                        destination = nil
-                    }
-                }
-            }
-            
-            Button("Cancel", role: .cancel) {
-                destination = nil
-            }
-        }
-    }
-    
     private var leadingToolbarItems: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
             Button {
-                toggleViewMode()
+                store.send(.toggleViewMode, animation: jobAnimation)
             } label: {
-                Image(systemName: viewMode == .full ? "list.bullet" : "rectangle.grid.1x2")
+                Image(systemName: store.viewMode == .full ? "list.bullet" : "rectangle.grid.1x2")
             }
         }
     }
@@ -276,7 +162,7 @@ public struct JobsListView: View {
     private var trailingToolbarItems: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
             Button {
-                destination = .jobForm(jobApplication)
+                store.send(.onAddApplicationTapped)
             } label: {
                 Image(systemName: "plus")
                     .fontWeight(.semibold)
@@ -287,11 +173,11 @@ public struct JobsListView: View {
     // MARK: - Computed Properties
     
     private var activeJobs: [JobApplication] {
-        jobApplications.filter { $0.status != ApplicationStatus.archived.rawValue }
+        store.jobApplications.filter { $0.status != ApplicationStatus.archived.rawValue }
     }
     
     private var archivedJobs: [JobApplication] {
-        jobApplications.filter { $0.status == ApplicationStatus.archived.rawValue }
+        store.jobApplications.filter { $0.status == ApplicationStatus.archived.rawValue }
     }
     
     private var hasArchivedJobs: Bool {
@@ -320,7 +206,7 @@ public struct JobsListView: View {
     
     private var addApplicationButton: some View {
         Button {
-            destination = .jobForm(jobApplication)
+            store.send(.onAddApplicationTapped)
         } label: {
             Text("Add Application")
                 .font(.headline)
@@ -337,5 +223,161 @@ public struct JobsListView: View {
 // MARK: - Preview
 
 #Preview {
-    JobsListView()
+    _ = try! prepareDependencies {
+        $0.defaultDatabase = try appDatabase()
+    }
+    
+    return NavigationStack {
+        JobsListView(
+            store: Store(
+                initialState: JobsListLogic.State(),
+                reducer: { JobsListLogic() }
+            )
+        )
+    }
+}
+
+// MARK: - Reducer
+
+@Reducer
+public struct JobsListLogic: Reducer, Sendable {
+    public init() {}
+    
+    @Reducer(state: .equatable, .sendable, action: .equatable, .sendable)
+    public enum Destination {
+        case jobForm(JobFormLogic)
+    }
+    
+    @ObservableState
+    public struct State: Equatable, Sendable {
+        @SharedReader(.fetchAll(sql: "SELECT * FROM jobApplications")) var jobApplications: [JobApplication]
+        var isCompact: Bool = true
+        var jobApplication: JobApplication?
+        @Presents var destination: Destination.State?
+        @Presents var alert: AlertState<Action.Alert>?
+        
+        var viewMode: ViewMode = .compact
+        public enum ViewMode: Equatable, Sendable {
+            case full
+            case compact
+        }
+    }
+
+    public enum Action: Equatable, Sendable, BindableAction {
+        case binding(BindingAction<State>)
+        case destination(PresentationAction<Destination.Action>)
+        case toggleViewMode
+        case onEditButtonTapped(JobApplication)
+        case onAddApplicationTapped
+        case onDeleteButtonTapped(JobApplication)
+        case updateJobStatus(job: JobApplication, status: ApplicationStatus)
+        case saveJob(job: JobApplication)
+        
+        case alert(PresentationAction<Alert>)
+        @CasePathable
+        public enum Alert: Equatable, Sendable {
+            case confirmDeleteJob
+        }
+    }
+    
+    @Dependency(\.defaultDatabase) var database
+
+    public var body: some Reducer<State, Action> {
+        BindingReducer()
+        Reduce<State, Action> { state, action in
+            switch action {
+            case .alert(.presented(.confirmDeleteJob)):
+                state.alert = nil
+                return .run { [jobApplication = state.jobApplication] _ in
+                    precondition(jobApplication != nil, "How can this even be nil at this point?")
+                    _ = try database.write { db in
+                        try jobApplication!.delete(db)
+                    }
+                }
+                
+            case .toggleViewMode:
+                state.viewMode = state.viewMode == .full ? .compact : .full
+                state.isCompact = state.viewMode == .compact
+                return .none
+                
+            case let .onEditButtonTapped(jobApplication):
+                state.jobApplication = jobApplication
+                state.destination = .jobForm(JobFormLogic.State(jobApplication: jobApplication))
+                return .none
+                
+            case .onAddApplicationTapped:
+                state.destination = .jobForm(JobFormLogic.State())
+                return .none
+                
+            case let .onDeleteButtonTapped(jobApplication):
+                state.jobApplication = jobApplication
+                state.alert = AlertState {
+                    TextState("Are you sure you want to delete this job application?")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("Cancel")
+                    }
+                    ButtonState(role: .destructive, action: .confirmDeleteJob) {
+                        TextState("Delete")
+                    }
+                }
+                return .none
+                
+            case let .updateJobStatus(job: job, status: status):
+                return .run { _ in
+                    var updatedJob = job
+                    updatedJob.status = status.rawValue
+                    
+                    try database.write { db in
+                        try updatedJob.update(db)
+                    }
+                }
+                
+            case let .saveJob(job: job):
+                return .run { [jobApplications = state.jobApplications] _ in
+                    
+                    guard jobApplications.firstIndex(where: { $0.id == job.id }) != nil else {
+                        // Add new job
+                        var newJob = job
+                        try database.write { db in
+                            try newJob.insert(db)
+                        }
+                        return
+                    }
+                    
+                    // Update existing job
+                    try database.write { db in
+                        try job.update(db)
+                    }
+                }
+                
+            case let .destination(.presented(.jobForm(.delegate(.onSaveButtonTapped(job))))):
+                
+                return .send(.saveJob(job: job))
+                
+            case .binding, .destination, .alert:
+                return .none
+            }
+        }
+        .ifLet(\.$destination, action: \.destination)
+        .ifLet(\.$alert, action: \.alert)
+    }
+}
+
+// MARK: JobsListLogic.State initialisers
+
+public extension JobsListLogic.State {
+    init(
+        isCompact: Bool = true,
+        jobApplication: JobApplication? = nil,
+        destination: JobsListLogic.Destination.State? = nil,
+        alert: AlertState<JobsListLogic.Action.Alert>? = nil,
+        viewMode: ViewMode = .compact
+    ) {
+        self.isCompact = isCompact
+        self.jobApplication = jobApplication
+        self.destination = destination
+        self.alert = alert
+        self.viewMode = viewMode
+    }
 }

@@ -1,33 +1,11 @@
 //  Created by Muhammed Mahmood on 19/04/2025.
 
+import ComposableArchitecture
 import SwiftUI
 import Theme
 
 struct JobFormView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    private var originalJob: JobApplication?
-    @State private var title: String
-    @State private var company: String
-    @State private var dateApplied: Date
-    @State private var status: ApplicationStatus
-    @State private var notes: String
-
-    @State private var titleHasError: Bool = false
-    @State private var companyHasError: Bool = false
-    @State private var showValidationErrors: Bool = false
-
-    private var onSave: (JobApplication?) -> Void
-
-    init(job: JobApplication?, onSave: @escaping (JobApplication?) -> Void) {
-        self.originalJob = job
-        self.onSave = onSave
-        _title = State(initialValue: job?.title ?? "")
-        _company = State(initialValue: job?.company ?? "")
-        _dateApplied = State(initialValue: job?.dateApplied ?? Date())
-        _status = State(initialValue: ApplicationStatus.toApplicationStatus(from: job?.status ?? ApplicationStatus.applied.rawValue))
-        _notes = State(initialValue: job?.notes ?? "")
-    }
+    @Bindable var store: StoreOf<JobFormLogic>
 
     var body: some View {
         NavigationStack {
@@ -35,20 +13,20 @@ struct JobFormView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     SectionHeader("Job Details")
 
-                    ValidatedTextField(title: "Job Title", text: $title, hasError: $titleHasError, isRequired: true)
-                    ValidatedTextField(title: "Company", text: $company, hasError: $companyHasError, isRequired: true)
+                    ValidatedTextField(title: "Job Title", text: $store.title, hasError: $store.titleHasError, isRequired: true)
+                    ValidatedTextField(title: "Company", text: $store.company, hasError: $store.companyHasError, isRequired: true)
                     VStack(alignment: .leading, spacing: 16) {
                         HStack(spacing: 8) {
                             Text("Date Applied")
                                 .font(.headline)
-                            DatePicker("", selection: $dateApplied, displayedComponents: .date)
+                            DatePicker("", selection: $store.dateApplied, displayedComponents: .date)
                                 .labelsHidden()
                         }
 
                         HStack(spacing: 8) {
                             Text("Status")
                                 .font(.headline)
-                            Picker("", selection: $status) {
+                            Picker("", selection: $store.status) {
                                 ForEach(ApplicationStatus.allCases.filter { $0 != .archived }, id: \.self) { status in
                                     Text(status.rawValue.capitalized)
                                 }
@@ -60,7 +38,7 @@ struct JobFormView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         SectionHeader("Notes")
 
-                        TextEditor(text: $notes)
+                        TextEditor(text: $store.notes)
                             .padding(10)
                             .frame(minHeight: 150)
                             .overlay(
@@ -72,32 +50,17 @@ struct JobFormView: View {
                 .padding(.horizontal)
             }
             .scrollDismissesKeyboard(.interactively)
-            .navigationTitle(originalJob == nil ? "Add Application" : "Edit Application")
+            .navigationTitle(store.jobApplication == nil ? "Add Application" : "Edit Application")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        store.send(.onCancelButtonTapped)
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        titleHasError = title.isEmpty
-                        companyHasError = company.isEmpty
-                        showValidationErrors = true
-
-                        guard !title.isEmpty, !company.isEmpty else { return }
-
-                        let updatedJob = JobApplication(
-                            id: originalJob?.id ?? 1,
-                            title: title,
-                            company: company,
-                            dateApplied: dateApplied,
-                            status: status.rawValue,
-                            notes: notes.isEmpty ? nil : notes,
-                            lastFollowUpDate: originalJob?.lastFollowUpDate
-                        )
-                        onSave(updatedJob)
+                        store.send(.onSaveButtonTappedValidation)
                     }
                 }
             }
@@ -153,6 +116,96 @@ private struct SectionHeader: View {
     }
 }
 
+// MARK: - Preview
+
 #Preview {
-    JobFormView(job: JobApplication.mock) { _ in }
+    JobFormView(
+        store: Store(
+            initialState: JobFormLogic.State(jobApplication: nil),
+            reducer: { JobFormLogic() }
+        )
+    )
+}
+
+// MARK: - Reducer
+
+@Reducer
+public struct JobFormLogic: Reducer, Sendable {
+    @ObservableState
+    public struct State: Equatable, Sendable {
+        var jobApplication: JobApplication?
+        var title: String
+        var company: String
+        var dateApplied: Date
+        var status: ApplicationStatus
+        var notes: String
+
+        var titleHasError: Bool = false
+        var companyHasError: Bool = false
+        var showValidationErrors: Bool = false
+    }
+
+    public enum Action: Equatable, Sendable, BindableAction {
+        case binding(BindingAction<State>)
+        case onSaveButtonTappedValidation
+        case onCancelButtonTapped
+        case delegate(Delegate)
+
+        public enum Delegate: Equatable, Sendable {
+            case onSaveButtonTapped(JobApplication)
+        }
+    }
+
+    @Dependency(\.dismiss) var dismiss
+
+    public var body: some Reducer<State, Action> {
+        BindingReducer()
+        Reduce<State, Action> { state, action in
+            switch action {
+            case .onCancelButtonTapped:
+                return .run { _ in
+                    await dismiss()
+                }
+
+            case .onSaveButtonTappedValidation:
+                state.titleHasError = state.title.isEmpty
+                state.companyHasError = state.company.isEmpty
+                state.showValidationErrors = true
+
+                guard !state.title.isEmpty, !state.company.isEmpty else { return .none }
+
+                let job = JobApplication(
+                    id: state.jobApplication?.id ?? 1,
+                    title: state.title,
+                    company: state.company,
+                    dateApplied: state.dateApplied,
+                    status: state.status.rawValue,
+                    notes: state.notes.isEmpty ? nil : state.notes,
+                    lastFollowUpDate: state.jobApplication?.lastFollowUpDate
+                )
+
+                return .run { send in
+                    await send(
+                        .delegate(.onSaveButtonTapped(job)),
+                        animation: .interactiveSpring(duration: 0.3, extraBounce: 0.3, blendDuration: 0.8)
+                    )
+                    await dismiss()
+                }
+
+            case .binding, .delegate:
+                return .none
+            }
+        }
+    }
+}
+
+extension JobFormLogic.State {
+    init(jobApplication: JobApplication? = nil) {
+        self.jobApplication = jobApplication
+        self.title = jobApplication?.title ?? ""
+        self.company = jobApplication?.company ?? ""
+        self.dateApplied = jobApplication?.dateApplied ?? Date()
+        self.status = ApplicationStatus.toApplicationStatus(from: jobApplication?.status ?? ApplicationStatus.applied.rawValue)
+        self.notes = jobApplication?.notes ?? ""
+    }
 }

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		79660B132DB57D8B005AB6FA /* SharingGRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 79660B122DB57D8B005AB6FA /* SharingGRDB */; };
 		797C340D2DB31C8B00CB4D49 /* Jobs in Frameworks */ = {isa = PBXBuildFile; productRef = 797C340C2DB31C8B00CB4D49 /* Jobs */; };
+		79BB62F42DB6314C0075739B /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 79BB62F32DB6314C0075739B /* ComposableArchitecture */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +28,7 @@
 			files = (
 				79660B132DB57D8B005AB6FA /* SharingGRDB in Frameworks */,
 				797C340D2DB31C8B00CB4D49 /* Jobs in Frameworks */,
+				79BB62F42DB6314C0075739B /* ComposableArchitecture in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +82,7 @@
 			packageProductDependencies = (
 				797C340C2DB31C8B00CB4D49 /* Jobs */,
 				79660B122DB57D8B005AB6FA /* SharingGRDB */,
+				79BB62F32DB6314C0075739B /* ComposableArchitecture */,
 			);
 			productName = SampleProject;
 			productReference = 09FF2A452C3694080047D325 /* ApplyPal.app */;
@@ -111,6 +114,7 @@
 			mainGroup = 09FF2A3C2C3694080047D325;
 			packageReferences = (
 				79660B112DB57D8B005AB6FA /* XCRemoteSwiftPackageReference "sharing-grdb" */,
+				79BB62F22DB6314C0075739B /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
 			);
 			productRefGroup = 09FF2A462C3694080047D325 /* Products */;
 			projectDirPath = "";
@@ -361,6 +365,14 @@
 				minimumVersion = 0.1.1;
 			};
 		};
+		79BB62F22DB6314C0075739B /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.19.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -372,6 +384,11 @@
 		797C340C2DB31C8B00CB4D49 /* Jobs */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Jobs;
+		};
+		79BB62F32DB6314C0075739B /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 79BB62F22DB6314C0075739B /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
