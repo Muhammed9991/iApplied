@@ -7,7 +7,6 @@ import Theme
 struct JobFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var store: StoreOf<JobFormLogic>
-    var onSave: (JobApplication?) -> Void
 
     var body: some View {
         NavigationStack {
@@ -62,23 +61,7 @@ struct JobFormView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        store.titleHasError = store.title.isEmpty
-                        store.companyHasError = store.company.isEmpty
-                        store.showValidationErrors = true
-
-                        guard !store.title.isEmpty, !store.company.isEmpty else { return }
-
-                        let updatedJob = JobApplication(
-                            id: store.jobApplication?.id ?? 1,
-                            title: store.title,
-                            company: store.company,
-                            dateApplied: store.dateApplied,
-                            status: store.status.rawValue,
-                            notes: store.notes.isEmpty ? nil : store.notes,
-                            lastFollowUpDate: store.jobApplication?.lastFollowUpDate
-                        )
-                        onSave(updatedJob)
-                        dismiss()
+                        store.send(.onSaveButtonTappedValidation)
                     }
                 }
             }
@@ -141,15 +124,14 @@ private struct SectionHeader: View {
         store: Store(
             initialState: JobFormLogic.State(jobApplication: nil),
             reducer: { JobFormLogic() }
-        ),
-        onSave: { _ in }
+        )
     )
 }
 
 // MARK: - Reducer
 
 @Reducer
-public struct JobFormLogic: Reducer {
+public struct JobFormLogic: Reducer, Sendable {
     @ObservableState
     public struct State: Equatable, Sendable {
         var jobApplication: JobApplication?
@@ -166,14 +148,47 @@ public struct JobFormLogic: Reducer {
 
     public enum Action: Equatable, Sendable, BindableAction {
         case binding(BindingAction<State>)
+        case onSaveButtonTappedValidation
+        case delegate(Delegate)
+
+        public enum Delegate: Equatable, Sendable {
+            case onSaveButtonTapped(JobApplication)
+        }
     }
+    
+    @Dependency(\.dismiss) var dismiss
 
     public var body: some Reducer<State, Action> {
         BindingReducer()
-        Reduce<State, Action> { _, action in
+        Reduce<State, Action> { state, action in
             switch action {
-            case .binding:
-                .none
+            case .onSaveButtonTappedValidation:
+                state.titleHasError = state.title.isEmpty
+                state.companyHasError = state.company.isEmpty
+                state.showValidationErrors = true
+
+                guard !state.title.isEmpty, !state.company.isEmpty else { return .none }
+
+                let job = JobApplication(
+                    id: state.jobApplication?.id ?? 1,
+                    title: state.title,
+                    company: state.company,
+                    dateApplied: state.dateApplied,
+                    status: state.status.rawValue,
+                    notes: state.notes.isEmpty ? nil : state.notes,
+                    lastFollowUpDate: state.jobApplication?.lastFollowUpDate
+                )
+
+                return .run { send in
+                    await send(
+                        .delegate(.onSaveButtonTapped(job)),
+                        animation:  .interactiveSpring(duration: 0.3, extraBounce: 0.3, blendDuration: 0.8)
+                    )
+                    await self.dismiss()
+                }
+
+            case .binding, .delegate:
+                return .none
             }
         }
     }

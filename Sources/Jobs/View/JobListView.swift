@@ -39,15 +39,8 @@ public struct JobsListView: View {
             }
             .alert($store.scope(state: \.alert, action: \.alert))
             .sheet(item: $store.scope(state: \.destination?.jobForm, action: \.destination.jobForm)) { store in
-                JobFormView(
-                    store: store,
-                    onSave: { savedJob in
-                        if let savedJob {
-                            self.store.send(.saveJob(job: savedJob), animation: jobAnimation)
-                        }
-                    }
-                )
-                .interactiveDismissDisabled()
+                JobFormView(store: store)
+                    .interactiveDismissDisabled()
             }
         }
     }
@@ -363,6 +356,10 @@ public struct JobsListLogic: Reducer, Sendable {
                         try job.update(db)
                     }
                 }
+                
+            case let .destination(.presented(.jobForm(.delegate(.onSaveButtonTapped(job))))):
+                
+                return .send(.saveJob(job: job))
                 
             case .binding, .destination, .alert:
                 return .none
