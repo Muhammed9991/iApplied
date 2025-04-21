@@ -5,7 +5,6 @@ import SwiftUI
 import Theme
 
 struct JobFormView: View {
-    @Environment(\.dismiss) private var dismiss
     @Bindable var store: StoreOf<JobFormLogic>
 
     var body: some View {
@@ -56,7 +55,7 @@ struct JobFormView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        store.send(.onCancelButtonTapped)
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -149,19 +148,25 @@ public struct JobFormLogic: Reducer, Sendable {
     public enum Action: Equatable, Sendable, BindableAction {
         case binding(BindingAction<State>)
         case onSaveButtonTappedValidation
+        case onCancelButtonTapped
         case delegate(Delegate)
 
         public enum Delegate: Equatable, Sendable {
             case onSaveButtonTapped(JobApplication)
         }
     }
-    
+
     @Dependency(\.dismiss) var dismiss
 
     public var body: some Reducer<State, Action> {
         BindingReducer()
         Reduce<State, Action> { state, action in
             switch action {
+            case .onCancelButtonTapped:
+                return .run { _ in
+                    await dismiss()
+                }
+
             case .onSaveButtonTappedValidation:
                 state.titleHasError = state.title.isEmpty
                 state.companyHasError = state.company.isEmpty
@@ -182,9 +187,9 @@ public struct JobFormLogic: Reducer, Sendable {
                 return .run { send in
                     await send(
                         .delegate(.onSaveButtonTapped(job)),
-                        animation:  .interactiveSpring(duration: 0.3, extraBounce: 0.3, blendDuration: 0.8)
+                        animation: .interactiveSpring(duration: 0.3, extraBounce: 0.3, blendDuration: 0.8)
                     )
-                    await self.dismiss()
+                    await dismiss()
                 }
 
             case .binding, .delegate:
