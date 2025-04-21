@@ -1,7 +1,39 @@
 //  Created by Muhammed Mahmood on 19/04/2025.
 
+import ComposableArchitecture
 import SwiftUI
 import Theme
+
+@Reducer
+struct JobFormLogic: Reducer {
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var originalJob: JobApplication?
+        var title: String
+        var company: String
+        var dateApplied: Date
+        var status: ApplicationStatus
+        var notes: String
+
+        var titleHasError: Bool = false
+        var companyHasError: Bool = false
+        var showValidationErrors: Bool = false
+    }
+
+    enum Action: Equatable, Sendable, BindableAction {
+        case binding(BindingAction<State>)
+    }
+
+    var body: some Reducer<State, Action> {
+        BindingReducer()
+        Reduce<State, Action> { _, action in
+            switch action {
+            case .binding:
+                .none
+            }
+        }
+    }
+}
 
 struct JobFormView: View {
     @Environment(\.dismiss) private var dismiss

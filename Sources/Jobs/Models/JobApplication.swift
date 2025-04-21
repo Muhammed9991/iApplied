@@ -3,7 +3,7 @@
 import Foundation
 import GRDB
 
-public struct JobApplication: Identifiable, Codable, Hashable, FetchableRecord, MutablePersistableRecord, Sendable {
+public struct JobApplication: Identifiable, Codable, Hashable, FetchableRecord, MutablePersistableRecord, Sendable, Equatable {
     public static let databaseTableName = "jobApplications"
 
     public var id: Int64?

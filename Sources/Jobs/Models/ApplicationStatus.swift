@@ -3,7 +3,7 @@
 import SwiftUI
 import Theme
 
-public enum ApplicationStatus: String, CaseIterable, Codable, Sendable {
+public enum ApplicationStatus: String, CaseIterable, Codable, Sendable, Equatable {
     case applied = "Applied"
     case interview = "Interview"
     case offer = "Offer"

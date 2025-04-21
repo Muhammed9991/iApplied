@@ -1,7 +1,31 @@
 //  Created by Muhammed Mahmood on 19/04/2025.
 
+import ComposableArchitecture
 import SwiftUI
 import Theme
+
+@Reducer
+struct JobCardLogic: Reducer {
+    @ObservableState
+    struct State: Equatable, Sendable {
+        var job: JobApplication
+        var isCompact: Bool = true
+    }
+    
+    enum Action: Equatable, Sendable, BindableAction {
+        case binding(BindingAction<State>)
+    }
+    
+    var body: some Reducer<State, Action> {
+        BindingReducer()
+        Reduce<State, Action> { _, action in
+            switch action {
+            case .binding:
+                .none
+            }
+        }
+    }
+}
 
 struct JobCardView: View {
     let job: JobApplication

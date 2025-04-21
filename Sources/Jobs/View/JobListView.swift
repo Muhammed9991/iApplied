@@ -1,5 +1,6 @@
 //  Created by Muhammed Mahmood on 19/04/2025.
 
+import ComposableArchitecture
 import SharingGRDB
 import SwiftUI
 import SwiftUINavigation
@@ -11,8 +12,48 @@ enum Destination {
     case jobForm(JobApplication?)
 }
 
+@Reducer
+struct JobsListLogic: Reducer {
+    @Reducer(state: .equatable, action: .equatable)
+    enum Destination {
+        case jobForm(JobFormLogic)
+    }
+    
+    @ObservableState
+    struct State: Equatable, Sendable {
+        @SharedReader(.fetchAll(sql: "SELECT * FROM jobApplications")) var jobApplications: [JobApplication]
+        var isCompact: Bool = true
+        var jobApplication: JobApplication?
+        @Presents var destination: Destination.State?
+        
+        var viewMode: ViewMode = .compact
+        enum ViewMode: Equatable, Sendable {
+            case full
+            case compact
+        }
+    }
+
+    enum Action: Equatable, Sendable, BindableAction {
+        case binding(BindingAction<State>)
+        case destination(PresentationAction<Destination.Action>)
+    }
+    
+    @Dependency(\.defaultDatabase) var database
+
+    var body: some Reducer<State, Action> {
+        BindingReducer()
+        Reduce<State, Action> { _, action in
+            switch action {
+            case .binding, .destination:
+                .none
+            }
+        }
+        .ifLet(\.$destination, action: \.destination)
+    }
+}
+
 public struct JobsListView: View {
-    @SharedReader(.fetchAll(sql: "SELECT * FROM jobApplications")) var jobApplications: [JobApplication]
+    @Bindable var store: StoreOf<JobsListLogic>
     
     @Dependency(\.defaultDatabase) var database
 
@@ -24,8 +65,6 @@ public struct JobsListView: View {
         case full
         case compact
     }
-    
-    public init() {}
     
     private func toggleViewMode() {
         viewMode = viewMode == .full ? .compact : .full
@@ -52,7 +91,7 @@ public struct JobsListView: View {
     
     private func saveJob(_ job: JobApplication) {
         withAnimation(jobAnimation) {
-            if jobApplications.firstIndex(where: { $0.id == job.id }) != nil {
+            if store.jobApplications.firstIndex(where: { $0.id == job.id }) != nil {
                 // Update existing job
                 do {
                     try database.write { db in
@@ -107,7 +146,7 @@ public struct JobsListView: View {
                 AppColors.background
                     .ignoresSafeArea()
                 
-                if jobApplications.isEmpty {
+                if store.jobApplications.isEmpty {
                     emptyStateView
                 } else {
                     jobListContent
@@ -287,11 +326,11 @@ public struct JobsListView: View {
     // MARK: - Computed Properties
     
     private var activeJobs: [JobApplication] {
-        jobApplications.filter { $0.status != ApplicationStatus.archived.rawValue }
+        store.jobApplications.filter { $0.status != ApplicationStatus.archived.rawValue }
     }
     
     private var archivedJobs: [JobApplication] {
-        jobApplications.filter { $0.status == ApplicationStatus.archived.rawValue }
+        store.jobApplications.filter { $0.status == ApplicationStatus.archived.rawValue }
     }
     
     private var hasArchivedJobs: Bool {
@@ -337,5 +376,10 @@ public struct JobsListView: View {
 // MARK: - Preview
 
 #Preview {
-    JobsListView()
+    JobsListView(
+        store: Store(
+            initialState: JobsListLogic.State(),
+            reducer: { JobsListLogic() }
+        )
+    )
 }
