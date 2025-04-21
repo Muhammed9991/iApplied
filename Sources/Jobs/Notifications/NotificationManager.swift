@@ -59,7 +59,11 @@ extension NotificationManager: DependencyKey {
             content.body = config.body
             content.sound = .default
             
+            #if DEBUG
+            let notificationDate = Calendar.current.date(byAdding: .minute, value: 1, to: config.baseDate) ?? config.baseDate
+            #else
             let notificationDate = Calendar.current.date(byAdding: .day, value: config.daysAfterDate, to: config.baseDate) ?? config.baseDate
+            #endif
             
             let dateComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: notificationDate)
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
@@ -79,14 +83,14 @@ extension NotificationManager: DependencyKey {
         } cancelAllNotifications: {
             UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
             
-        } scheduleFollowUpNotification: { jobApplication  in
+        } scheduleFollowUpNotification: { jobApplication in
             precondition(jobApplication.id != nil, "Bruh how would this even be possible?")
             
             // Cancel any existing follow-up notifications for this job
             cancelNotifications(for: jobApplication.id!, type: .followUp)
             
             let notificationId = notificationIdentifier(for: jobApplication.id!, type: .followUp)
-            let daysAfterDate: Int = 7 // <--- This should come from settings in future
+            let daysAfterDate = 7 // <--- This should come from settings in future
             let config = NotificationConfig(
                 title: "Follow up: \(jobApplication.title) at \(jobApplication.company)",
                 body: "It's been \(daysAfterDate) days since you applied. Consider following up!",
