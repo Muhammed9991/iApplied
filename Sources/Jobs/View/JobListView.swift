@@ -36,16 +36,23 @@ struct JobsListLogic: Reducer {
     enum Action: Equatable, Sendable, BindableAction {
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
+        case toggleViewMode
     }
     
     @Dependency(\.defaultDatabase) var database
 
     var body: some Reducer<State, Action> {
         BindingReducer()
-        Reduce<State, Action> { _, action in
+        Reduce<State, Action> { state, action in
             switch action {
+                
+            case .toggleViewMode:
+                state.viewMode = state.viewMode == .full ? .compact : .full
+                state.isCompact = state.viewMode == .compact
+                return .none
+                
             case .binding, .destination:
-                .none
+                return .none
             }
         }
         .ifLet(\.$destination, action: \.destination)
@@ -57,18 +64,8 @@ public struct JobsListView: View {
     
     @Dependency(\.defaultDatabase) var database
 
-    @State private var viewMode: ViewMode = .compact
-    @State private var isCompact: Bool = true
     @State private var jobApplication: JobApplication?
     @State var destination: Destination?
-    enum ViewMode {
-        case full
-        case compact
-    }
-    
-    private func toggleViewMode() {
-        viewMode = viewMode == .full ? .compact : .full
-    }
     
     /// Animation configuration used across job-related actions
     private var jobAnimation: Animation {
@@ -152,9 +149,6 @@ public struct JobsListView: View {
                     jobListContent
                 }
             }
-            .onChange(of: viewMode) { _, newValue in
-                isCompact = newValue == .compact
-            }
             .navigationTitle("Applications")
             .toolbar {
                 leadingToolbarItems
@@ -220,7 +214,7 @@ public struct JobsListView: View {
     private func jobCardView(for job: JobApplication, isArchived: Bool) -> some View {
         JobCardView(
             job: job,
-            isCompact: $isCompact,
+            isCompact: $store.isCompact,
             onEdit: {
                 jobApplication = job
                 destination = .jobForm(job)
@@ -305,9 +299,9 @@ public struct JobsListView: View {
     private var leadingToolbarItems: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
             Button {
-                toggleViewMode()
+                store.send(.toggleViewMode)
             } label: {
-                Image(systemName: viewMode == .full ? "list.bullet" : "rectangle.grid.1x2")
+                Image(systemName: store.viewMode == .full ? "list.bullet" : "rectangle.grid.1x2")
             }
         }
     }
