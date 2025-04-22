@@ -1,5 +1,5 @@
 {
-  "originHash" : "ff5e5ea558024d601312b8338f4a764b51141c2712b21da01a6843864d4fe0b6",
+  "originHash" : "1c763ec68378f81a367712d1141811569bef4e279e92e9fdd2c6eca71f1f4faa",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/sharing-grdb",
       "state" : {
-        "revision" : "83ad5261983c4fcc92d071610e09718ce5227e29",
-        "version" : "0.1.1"
+        "revision" : "8e8a46af5ea044f575cdf3c76b86303825196efb",
+        "version" : "0.2.0"
       }
     },
     {
@@ -128,12 +128,30 @@
       }
     },
     {
+      "identity" : "swift-snapshot-testing",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
+      "state" : {
+        "revision" : "1be8144023c367c5de701a6313ed29a3a10bf59b",
+        "version" : "1.18.3"
+      }
+    },
+    {
+      "identity" : "swift-structured-queries",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-structured-queries",
+      "state" : {
+        "revision" : "f157e6036aaf29e80771485e3efcf1177bfb76ae",
+        "version" : "0.1.1"
+      }
+    },
+    {
       "identity" : "swift-syntax",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
-        "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
-        "version" : "601.0.1"
+        "revision" : "0687f71944021d616d34d922343dcef086855920",
+        "version" : "600.0.1"
       }
     },
     {

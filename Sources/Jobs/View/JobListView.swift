@@ -64,14 +64,14 @@ public struct JobsListView: View {
     }
     
     private var activeJobsSection: some View {
-        ForEach(activeJobs) { job in
+        ForEach(store.activeJobs) { job in
             jobCardView(for: job, isArchived: false)
         }
     }
     
     private var archivedJobsSection: some View {
         Section(header: archivedSectionHeader) {
-            ForEach(archivedJobs) { job in
+            ForEach(store.archivedJobs) { job in
                 jobCardView(for: job, isArchived: true)
             }
         }
@@ -172,17 +172,7 @@ public struct JobsListView: View {
     
     // MARK: - Computed Properties
     
-    private var activeJobs: [JobApplication] {
-        store.jobApplications.filter { $0.status != ApplicationStatus.archived.rawValue }
-    }
-    
-    private var archivedJobs: [JobApplication] {
-        store.jobApplications.filter { $0.status == ApplicationStatus.archived.rawValue }
-    }
-    
-    private var hasArchivedJobs: Bool {
-        !archivedJobs.isEmpty
-    }
+    private var hasArchivedJobs: Bool { !store.archivedJobs.isEmpty }
     
     private var emptyStateView: some View {
         VStack(spacing: 20) {
@@ -250,7 +240,17 @@ public struct JobsListLogic: Reducer, Sendable {
     
     @ObservableState
     public struct State: Equatable, Sendable {
-        @SharedReader(.fetchAll(sql: "SELECT * FROM jobApplications")) var jobApplications: [JobApplication]
+        @ObservationStateIgnored
+        @FetchAll(JobApplication.all) var jobApplications
+        
+        @ObservationStateIgnored
+        @FetchAll(JobApplication.where { $0.status != ApplicationStatus.archived.rawValue })
+        var activeJobs: [JobApplication]
+        
+        @ObservationStateIgnored
+        @FetchAll(JobApplication.where { $0.status == ApplicationStatus.archived.rawValue })
+        var archivedJobs: [JobApplication]
+        
         var isCompact: Bool = true
         var jobApplication: JobApplication?
         @Presents var destination: Destination.State?
@@ -292,8 +292,8 @@ public struct JobsListLogic: Reducer, Sendable {
                 state.alert = nil
                 return .run { [jobApplication = state.jobApplication] _ in
                     precondition(jobApplication != nil, "How can this even be nil at this point?")
-                    _ = try database.write { db in
-                        try jobApplication!.delete(db)
+                    try database.write { db in
+                        try JobApplication.delete().execute(db)
                     }
                     
                     if let id = jobApplication?.id {
@@ -335,7 +335,7 @@ public struct JobsListLogic: Reducer, Sendable {
                     try await database.write { db in
                         var updatedJob = job
                         updatedJob.status = status.rawValue
-                        try updatedJob.update(db)
+                        try JobApplication.update(updatedJob).execute(db)
                     }
                     
                     if let id = job.id, status == .declined || status == .archived {
@@ -353,8 +353,7 @@ public struct JobsListLogic: Reducer, Sendable {
                     guard jobApplications.firstIndex(where: { $0.id == job.id }) != nil else {
                         // Add new job
                         try await database.write { db in
-                            var newJob = job
-                            try newJob.insert(db)
+                            try JobApplication.insert(job).execute(db)
                         }
                         await send(.scheduleNotification(job))
                         return
@@ -362,7 +361,7 @@ public struct JobsListLogic: Reducer, Sendable {
                     
                     // Update existing job
                     try await database.write { db in
-                        try job.update(db)
+                        try JobApplication.update(job).execute(db)
                     }
                     await send(.scheduleNotification(job))
                 }
