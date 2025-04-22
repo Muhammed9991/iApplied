@@ -16,6 +16,7 @@ public func appDatabase() throws -> any DatabaseWriter {
     @Dependency(\.context) var context
     if context == .live {
         let path = URL.documentsDirectory.appending(component: "db.sqlite").path()
+        print("sqlite3", path)
         print("open", path)
         database = try DatabasePool(path: path, configuration: configuration)
     } else {
