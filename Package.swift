@@ -14,7 +14,7 @@ let package = Package(
 
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.0"),
-        .package(url: "https://github.com/pointfreeco/sharing-grdb", from: "0.1.0"),
+        .package(url: "https://github.com/pointfreeco/sharing-grdb", from: "0.2.0"),
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.19.1"),
     ],
     targets: [

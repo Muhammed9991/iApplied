@@ -157,6 +157,7 @@ public struct JobFormLogic: Reducer, Sendable {
     }
 
     @Dependency(\.dismiss) var dismiss
+    @Dependency(\.date.now) var now
 
     public var body: some Reducer<State, Action> {
         BindingReducer()
@@ -178,6 +179,7 @@ public struct JobFormLogic: Reducer, Sendable {
                     id: state.jobApplication?.id ?? 1,
                     title: state.title,
                     company: state.company,
+                    createdAt: now,
                     dateApplied: state.dateApplied,
                     status: state.status.rawValue,
                     notes: state.notes.isEmpty ? nil : state.notes,

@@ -2,44 +2,20 @@
 
 import Foundation
 import GRDB
+import SharingGRDB
 
-public struct JobApplication: Identifiable, Codable, Hashable, FetchableRecord, MutablePersistableRecord, Sendable, Equatable {
-    public static let databaseTableName = "jobApplications"
-
+@Table
+public struct JobApplication: Identifiable, Sendable, Equatable {
     public var id: Int64?
     var title: String
     var company: String
-    var createdAt: Date
-    var dateApplied: Date
+    @Column(as: Date.ISO8601Representation.self) var createdAt: Date
+    @Column(as: Date.ISO8601Representation.self) var dateApplied: Date
     var status: String
     var notes: String?
-    var lastFollowUpDate: Date?
-
-    public init(
-        id: Int64? = nil,
-        createdAt: Date = Date(),
-        title: String,
-        company: String,
-        dateApplied: Date,
-        status: String,
-        notes: String? = nil,
-        lastFollowUpDate: Date? = nil
-    ) {
-        self.id = id
-        self.createdAt = createdAt
-        self.title = title
-        self.company = company
-        self.dateApplied = dateApplied
-        self.status = status
-        self.notes = notes
-        self.lastFollowUpDate = lastFollowUpDate
-    }
+    @Column(as: Date.ISO8601Representation?.self) var lastFollowUpDate: Date?
 
     var daysSinceApplied: Int { Calendar.current.dateComponents([.day], from: dateApplied, to: Date()).day ?? 0 }
-
-    public mutating func didInsert(_ inserted: InsertionSuccess) {
-        id = inserted.rowID
-    }
 }
 
 public extension JobApplication {
@@ -47,6 +23,7 @@ public extension JobApplication {
         JobApplication(
             title: "iOS Developer",
             company: "Tech Corp",
+            createdAt: Date(),
             dateApplied: Date().addingTimeInterval(-7*24*60*60), // 7 days ago
             status: ApplicationStatus.applied.rawValue,
             notes: "Applied through company website. Contact: john@techcorp.com"

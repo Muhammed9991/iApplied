@@ -26,7 +26,7 @@ public func appDatabase() throws -> any DatabaseWriter {
         migrator.eraseDatabaseOnSchemaChange = true
     #endif
     migrator.registerMigration("Add job applications lists table") { db in
-        try db.create(table: JobApplication.databaseTableName) { table in
+        try db.create(table: JobApplication.tableName) { table in
             table.autoIncrementedPrimaryKey("id")
             table.column("createdAt", .datetime).defaults(sql: "CURRENT_TIMESTAMP")
             table.column("title", .text).notNull()
@@ -66,14 +66,16 @@ public func appDatabase() throws -> any DatabaseWriter {
             ]
 
             for (dateApplied, title, company, status) in applications {
-                _ = try JobApplication(
-                    title: title,
-                    company: company,
-                    dateApplied: dateApplied,
-                    status: status,
-                    notes: "Applied for \(title) position at \(company). Waiting for response."
-                )
-                .inserted(self)
+                try seed {
+                    JobApplication(
+                        title: title,
+                        company: company,
+                        createdAt: Date(),
+                        dateApplied: dateApplied,
+                        status: status,
+                        notes: "Applied for \(title) position at \(company). Waiting for response."
+                    )
+                }
             }
         }
     }

@@ -362,7 +362,7 @@
 			repositoryURL = "https://github.com/pointfreeco/sharing-grdb";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.1;
+				minimumVersion = 0.2.0;
 			};
 		};
 		79BB62F22DB6314C0075739B /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
