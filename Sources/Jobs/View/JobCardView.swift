@@ -6,6 +6,7 @@ import Theme
 
 struct JobCardView: View {
     @Bindable var store: StoreOf<JobCardLogic>
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -13,7 +14,7 @@ struct JobCardView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(store.job.company)
                         .font(AppTypography.title)
-                        .foregroundColor(AppColors.primary)
+                        .foregroundColor(AppColors.primary(for: colorScheme))
                     
                     if !store.isCompact {
                         Text(store.job.title)
@@ -58,7 +59,7 @@ struct JobCardView: View {
             }
         }
         .padding(16)
-        .background(AppColors.cardBackground)
+        .background(AppColors.cardBackground(for: colorScheme))
         .cornerRadius(10)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: store.isCompact)

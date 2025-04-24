@@ -17,7 +17,6 @@ struct ContentView: View {
             initialState: JobsListLogic.State(),
             reducer: { JobsListLogic() }
         ))
-        .colorScheme(.light)
     }
 }
 

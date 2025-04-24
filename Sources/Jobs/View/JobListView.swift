@@ -8,6 +8,7 @@ import Theme
 
 public struct JobsListView: View {
     @Bindable var store: StoreOf<JobsListLogic>
+    @Environment(\.colorScheme) var colorScheme
     
     public init(store: StoreOf<JobsListLogic>) {
         self.store = store
@@ -23,7 +24,7 @@ public struct JobsListView: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.background
+                AppColors.background(for: colorScheme)
                     .ignoresSafeArea()
                 
                 if store.jobApplications.isEmpty {
@@ -60,7 +61,7 @@ public struct JobsListView: View {
         }
         .padding(.horizontal)
         .listStyle(.plain)
-        .background(AppColors.background)
+        .background(AppColors.background(for: colorScheme))
     }
     
     private var activeJobsSection: some View {
@@ -80,7 +81,7 @@ public struct JobsListView: View {
     private var archivedSectionHeader: some View {
         Text("Archived Applications")
             .font(AppTypography.title)
-            .foregroundColor(AppColors.primary)
+            .foregroundColor(AppColors.primary(for: colorScheme))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 20)
     }
@@ -125,7 +126,7 @@ public struct JobsListView: View {
             } label: {
                 Label("Edit", systemImage: "pencil")
             }
-            .tint(AppColors.accent)
+            .tint(AppColors.accent(for: colorScheme))
         }
     }
     
@@ -178,11 +179,11 @@ public struct JobsListView: View {
         VStack(spacing: 20) {
             Image(systemName: "doc.text.magnifyingglass")
                 .font(.system(size: 70))
-                .foregroundColor(AppColors.accent)
+                .foregroundColor(AppColors.accent(for: colorScheme))
             
             Text("No Job Applications Yet")
                 .font(AppTypography.title)
-                .foregroundColor(AppColors.primary)
+                .foregroundColor(AppColors.primary(for: colorScheme))
             
             Text("Tap + to add your first job application")
                 .font(AppTypography.body)
@@ -203,7 +204,7 @@ public struct JobsListView: View {
                 .foregroundColor(.white)
                 .padding(.horizontal, 24)
                 .padding(.vertical, 12)
-                .background(AppColors.accent)
+                .background(AppColors.accent(for: colorScheme))
                 .cornerRadius(10)
         }
         .padding(.top, 10)

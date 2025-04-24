@@ -3,12 +3,49 @@
 import SwiftUI
 
 public enum AppColors {
-    public static let primary = Color(hex: "2C3E50") // Midnight Blue
-    public static let accent = Color(hex: "1ABC9C") // Aqua Green
-    public static let background = Color(hex: "F5F5F5") // Soft Gray
-    public static let cardBackground = Color.white
+    public enum Light {
+        public static let primary = Color(hex: "2C3E50") // Dark blue
+        public static let accent = Color(hex: "1ABC9C") // Teal
+        public static let background = Color(hex: "F5F5F5") // Light gray
+        public static let cardBackground = Color.white
+        public static let textPrimary = Color.black
+        public static let textSecondary = Color(hex: "555555") // Gray
+    }
 
-    // Application status colors
+    public enum Dark {
+        public static let primary = Color(hex: "ECF0F1") // Light blue
+        public static let accent = Color(hex: "2ECC71") // Brighter green
+        public static let background = Color(hex: "1A1A1A") // Dark gray
+        public static let cardBackground = Color(hex: "2A2A2A") // Dark card background
+        public static let textPrimary = Color.white
+        public static let textSecondary = Color(hex: "BBBBBB") // Light gray
+    }
+
+    public static func primary(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Dark.primary : Light.primary
+    }
+
+    public static func accent(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Dark.accent : Light.accent
+    }
+
+    public static func background(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Dark.background : Light.background
+    }
+
+    public static func cardBackground(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Dark.cardBackground : Light.cardBackground
+    }
+
+    public static func textPrimary(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Dark.textPrimary : Light.textPrimary
+    }
+
+    public static func textSecondary(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Dark.textSecondary : Light.textSecondary
+    }
+
+    // Application status colors (more visible in dark mode)
     public enum Status {
         public static let applied = Color.blue
         public static let interview = Color.orange
