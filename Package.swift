@@ -16,6 +16,8 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-navigation", from: "2.3.0"),
         .package(url: "https://github.com/pointfreeco/sharing-grdb", from: "0.2.0"),
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.19.1"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.18.3"),
+        .package(url: "https://github.com/pointfreeco/swift-structured-queries", from: "0.1.1"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -28,6 +30,15 @@ let package = Package(
                 .product(name: "SwiftUINavigation", package: "swift-navigation"),
                 .product(name: "SharingGRDB", package: "sharing-grdb"),
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+            ]
+        ),
+        .testTarget(
+            name: "JobsTest",
+            dependencies: [
+                "Jobs",
+                .product(name: "InlineSnapshotTesting", package: "swift-snapshot-testing"),
+                .product(name: "StructuredQueries", package: "swift-structured-queries"),
+                .product(name: "StructuredQueriesTestSupport", package: "swift-structured-queries"),
             ]
         ),
     ]
