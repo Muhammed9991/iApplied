@@ -57,6 +57,7 @@ public enum AppColors {
 
 public enum AppTypography {
     public static let title = Font.system(.title2, design: .default).weight(.semibold)
+    public static let subtitle = Font.system(.headline, design: .default)
     public static let body = Font.system(.body, design: .default)
     public static let caption = Font.system(.caption, design: .default).weight(.light)
 }

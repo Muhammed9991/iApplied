@@ -27,13 +27,24 @@ public struct JobsListView: View {
                 AppColors.background(for: colorScheme)
                     .ignoresSafeArea()
                 
-                if store.activeJobApplications.isEmpty {
-                    emptyStateView
-                } else {
-                    jobListContent
+                VStack(spacing: 0) {
+                    // Fixed tab selection view at the top
+                    tabSelectionView
+                        .padding(.bottom, 8)
+                    
+                    if (store.selectedTab == .active && store.activeJobApplications.isEmpty) ||
+                        (store.selectedTab == .archived && store.archivedJobApplications.isEmpty)
+                    {
+                        emptyStateView
+                    } else {
+                        jobListContent
+                    }
+                    
+                    Spacer(minLength: 0)
                 }
             }
             .navigationTitle("Applications")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 leadingToolbarItems
                 trailingToolbarItems
@@ -48,19 +59,80 @@ public struct JobsListView: View {
     
     // MARK: - View Components
     
-    /// List with all job applications
+    private var tabSelectionView: some View {
+        VStack(spacing: 0) {
+            ZStack(alignment: .bottom) {
+                HStack(spacing: 0) {
+                    tabButton(for: .active)
+                    tabButton(for: .archived)
+                }
+                
+                // Animated sliding underline
+                GeometryReader { geometry in
+                    Rectangle()
+                        .fill(AppColors.accent(for: colorScheme))
+                        .frame(width: geometry.size.width / 2, height: 3)
+                        .cornerRadius(1.5)
+                        .offset(x: store.selectedTab == .active ? 0 : geometry.size.width / 2)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: store.selectedTab)
+                }
+                .frame(height: 3)
+                .padding(.bottom, 0)
+            }
+            .padding(.horizontal)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+            
+            Divider()
+                .background(AppColors.textSecondary(for: colorScheme).opacity(0.3))
+        }
+        .background(
+            Rectangle()
+                .fill(AppColors.background(for: colorScheme))
+                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        )
+    }
+    
+    private func tabButton(for tab: JobsListLogic.State.Tab) -> some View {
+        Button {
+            store.send(.binding(.set(\.selectedTab, tab)), animation: .spring(response: 0.3, dampingFraction: 0.7))
+        } label: {
+            VStack(spacing: 8) {
+                Text(tab == .active ? "Active" : "Archived")
+                    .font(AppTypography.subtitle)
+                    .foregroundColor(store.selectedTab == tab
+                        ? AppColors.accent(for: colorScheme)
+                        : AppColors.primary(for: colorScheme).opacity(0.6))
+                    .fontWeight(store.selectedTab == tab ? .semibold : .regular)
+                    .padding(.bottom, 4)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+    }
+    
     private var jobListContent: some View {
         List {
-            // Active job applications
-            activeJobsSection
+            if store.selectedTab == .active {
+                activeJobsSection
+            } else {
+                archivedJobsSection
+            }
         }
         .padding(.horizontal)
+        .padding(.top, 8) // Add top padding to separate from tab bar
         .listStyle(.plain)
         .background(AppColors.background(for: colorScheme))
     }
     
     private var activeJobsSection: some View {
         ForEach(store.activeJobApplications) { job in
+            jobCardView(for: job)
+        }
+    }
+    
+    private var archivedJobsSection: some View {
+        ForEach(store.archivedJobApplications) { job in
             jobCardView(for: job)
         }
     }
@@ -147,22 +219,29 @@ public struct JobsListView: View {
     
     private var emptyStateView: some View {
         VStack(spacing: 20) {
-            Image(systemName: "doc.text.magnifyingglass")
+            Spacer()
+            
+            Image(systemName: store.selectedTab == .active ? "doc.text.magnifyingglass" : "archivebox")
                 .font(.system(size: 70))
                 .foregroundColor(AppColors.accent(for: colorScheme))
             
-            Text("No Job Applications Yet")
+            Text(store.selectedTab == .active ? "No Active Job Applications" : "No Archived Applications")
                 .font(AppTypography.title)
                 .foregroundColor(AppColors.primary(for: colorScheme))
             
-            Text("Tap + to add your first job application")
+            Text(store.selectedTab == .active ? "Tap + to add your first job application" : "Archived applications will appear here")
                 .font(AppTypography.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             
-            addApplicationButton
+            if store.selectedTab == .active {
+                addApplicationButton
+            }
+            
+            Spacer()
         }
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     private var addApplicationButton: some View {
@@ -220,6 +299,16 @@ public struct JobsListLogic: Reducer, Sendable {
         )
         var activeJobApplications
         
+        @ObservationStateIgnored
+        @FetchAll(
+            JobApplication
+                .all
+                .where { $0.status == ApplicationStatus.archived.rawValue }
+                .order { $0.dateApplied.desc() }
+        )
+        var archivedJobApplications
+        
+        var selectedTab: Tab = .active
         var isCompact: Bool = true
         var jobApplication: JobApplication?
         @Presents var destination: Destination.State?
@@ -229,6 +318,11 @@ public struct JobsListLogic: Reducer, Sendable {
         public enum ViewMode: Equatable, Sendable {
             case full
             case compact
+        }
+
+        public enum Tab: Equatable, Sendable {
+            case active
+            case archived
         }
     }
 
@@ -361,12 +455,14 @@ public extension JobsListLogic.State {
         jobApplication: JobApplication? = nil,
         destination: JobsListLogic.Destination.State? = nil,
         alert: AlertState<JobsListLogic.Action.Alert>? = nil,
-        viewMode: ViewMode = .compact
+        viewMode: ViewMode = .compact,
+        selectedTab: Tab = .active
     ) {
         self.isCompact = isCompact
         self.jobApplication = jobApplication
         self.destination = destination
         self.alert = alert
         self.viewMode = viewMode
+        self.selectedTab = selectedTab
     }
 }
