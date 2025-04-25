@@ -27,7 +27,7 @@ public struct JobsListView: View {
                 AppColors.background(for: colorScheme)
                     .ignoresSafeArea()
                 
-                if store.jobApplications.isEmpty {
+                if store.activeJobApplications.isEmpty {
                     emptyStateView
                 } else {
                     jobListContent
@@ -53,11 +53,6 @@ public struct JobsListView: View {
         List {
             // Active job applications
             activeJobsSection
-            
-            // Archived job applications
-            if hasArchivedJobs {
-                archivedJobsSection
-            }
         }
         .padding(.horizontal)
         .listStyle(.plain)
@@ -65,28 +60,12 @@ public struct JobsListView: View {
     }
     
     private var activeJobsSection: some View {
-        ForEach(store.activeJobs) { job in
-            jobCardView(for: job, isArchived: false)
+        ForEach(store.activeJobApplications) { job in
+            jobCardView(for: job)
         }
     }
     
-    private var archivedJobsSection: some View {
-        Section(header: archivedSectionHeader) {
-            ForEach(store.archivedJobs) { job in
-                jobCardView(for: job, isArchived: true)
-            }
-        }
-    }
-    
-    private var archivedSectionHeader: some View {
-        Text("Archived Applications")
-            .font(AppTypography.title)
-            .foregroundColor(AppColors.primary(for: colorScheme))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 20)
-    }
-    
-    private func jobCardView(for job: JobApplication, isArchived: Bool) -> some View {
+    private func jobCardView(for job: JobApplication) -> some View {
         JobCardView(
             store: Store(
                 initialState: JobCardLogic.State(
@@ -109,7 +88,7 @@ public struct JobsListView: View {
             trailingSwipeActions(for: job)
         }
         .swipeActions(edge: .leading) {
-            leadingSwipeAction(for: job, isArchived: isArchived)
+            leadingSwipeAction(for: job, isArchived: job.status == ApplicationStatus.archived.rawValue)
         }
     }
     
@@ -131,23 +110,16 @@ public struct JobsListView: View {
     }
     
     private func leadingSwipeAction(for job: JobApplication, isArchived: Bool) -> some View {
-        Group {
+        Button {
+            store.send(.updateJobStatus(job: job, status: isArchived ? .applied : .archived), animation: jobAnimation)
+        } label: {
             if isArchived {
-                Button {
-                    store.send(.updateJobStatus(job: job, status: .applied), animation: jobAnimation)
-                } label: {
-                    Label("Restore", systemImage: "arrow.uturn.left")
-                }
-                .tint(.blue)
+                Label("Restore", systemImage: "arrow.uturn.left")
             } else {
-                Button {
-                    store.send(.updateJobStatus(job: job, status: .archived), animation: jobAnimation)
-                } label: {
-                    Label("Archive", systemImage: "archivebox")
-                }
-                .tint(.gray)
+                Label("Archive", systemImage: "archivebox")
             }
         }
+        .tint(isArchived ? .blue : .gray)
     }
     
     private var leadingToolbarItems: some ToolbarContent {
@@ -172,8 +144,6 @@ public struct JobsListView: View {
     }
     
     // MARK: - Computed Properties
-    
-    private var hasArchivedJobs: Bool { !store.archivedJobs.isEmpty }
     
     private var emptyStateView: some View {
         VStack(spacing: 20) {
@@ -242,15 +212,13 @@ public struct JobsListLogic: Reducer, Sendable {
     @ObservableState
     public struct State: Equatable, Sendable {
         @ObservationStateIgnored
-        @FetchAll(JobApplication.all) var jobApplications
-        
-        @ObservationStateIgnored
-        @FetchAll(JobApplication.where { $0.status != ApplicationStatus.archived.rawValue })
-        var activeJobs: [JobApplication]
-        
-        @ObservationStateIgnored
-        @FetchAll(JobApplication.where { $0.status == ApplicationStatus.archived.rawValue })
-        var archivedJobs: [JobApplication]
+        @FetchAll(
+            JobApplication
+                .all
+                .where { $0.status != ApplicationStatus.archived.rawValue }
+                .order { $0.dateApplied.desc() }
+        )
+        var activeJobApplications
         
         var isCompact: Bool = true
         var jobApplication: JobApplication?
@@ -349,7 +317,7 @@ public struct JobsListLogic: Reducer, Sendable {
                 }
                 
             case let .saveJob(job: job):
-                return .run { [jobApplications = state.jobApplications] send in
+                return .run { [jobApplications = state.activeJobApplications] send in
                     
                     guard jobApplications.firstIndex(where: { $0.id == job.id }) != nil else {
                         // Add new job
