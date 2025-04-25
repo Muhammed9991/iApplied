@@ -27,7 +27,7 @@ struct JobFormView: View {
                             Text("Status")
                                 .font(.headline)
                             Picker("", selection: $store.status) {
-                                ForEach(ApplicationStatus.allCases.filter { $0 != .archived }, id: \.self) { status in
+                                ForEach(ApplicationStatus.allCases, id: \.self) { status in
                                     Text(status.rawValue.capitalized)
                                 }
                             }
