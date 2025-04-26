@@ -57,6 +57,15 @@ public func appDatabase() throws -> any DatabaseWriter {
             $0.isArchived = $0.status == "Archived"
         }
         .execute(db)
+        try JobApplication
+            .where {
+                $0.status == "Archived"
+            }
+            .update {
+                // Assumption if previously archived they were declined
+                $0.status = "Declined"
+            }
+            .execute(db)
     }
 
     try migrator.migrate(database)
