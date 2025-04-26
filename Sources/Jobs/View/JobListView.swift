@@ -360,7 +360,7 @@ public struct JobsListLogic: Reducer, Sendable {
                 return .run { [jobApplication = state.jobApplication] _ in
                     precondition(jobApplication != nil, "How can this even be nil at this point?")
                     try database.write { db in
-                        try JobApplication.delete().execute(db)
+                        try JobApplication.delete(jobApplication!).execute(db)
                     }
                     
                     if let id = jobApplication?.id {
