@@ -1,6 +1,7 @@
 import Dependencies
 import Foundation
 import GRDB
+import SharingGRDB
 
 public func appDatabase() throws -> any DatabaseWriter {
     let database: any DatabaseWriter
@@ -38,11 +39,26 @@ public func appDatabase() throws -> any DatabaseWriter {
             table.column("lastFollowUpDate", .datetime)
         }
     }
+
+    migrator.registerMigration("Add isArchived column to job applications table") { db in
+        try db.alter(table: JobApplication.tableName) { table in
+            table.add(column: "isArchived", .boolean).defaults(to: false).notNull()
+        }
+    }
+
     #if DEBUG
         migrator.registerMigration("Add mock data") { db in
             try db.createMockData()
         }
     #endif
+
+    migrator.registerMigration("Update isArchived flag based on legacy Archived status") { db in
+        try JobApplication.update {
+            $0.isArchived = $0.status == "Archived"
+        }
+        .execute(db)
+    }
+
     try migrator.migrate(database)
 
     return database
@@ -74,7 +90,8 @@ public func appDatabase() throws -> any DatabaseWriter {
                         createdAt: Date(),
                         dateApplied: dateApplied,
                         status: status,
-                        notes: "Applied for \(title) position at \(company). Waiting for response."
+                        notes: "Applied for \(title) position at \(company). Waiting for response.",
+                        isArchived: false
                     )
                 }
             }
