@@ -160,7 +160,7 @@ public struct JobsListView: View {
             trailingSwipeActions(for: job)
         }
         .swipeActions(edge: .leading) {
-            leadingSwipeAction(for: job, isArchived: job.status == ApplicationStatus.archived.rawValue)
+            leadingSwipeAction(for: job, isArchived: job.isArchived)
         }
     }
     
@@ -183,7 +183,7 @@ public struct JobsListView: View {
     
     private func leadingSwipeAction(for job: JobApplication, isArchived: Bool) -> some View {
         Button {
-            store.send(.updateJobStatus(job: job, status: isArchived ? .applied : .archived), animation: jobAnimation)
+            store.send(isArchived ? .unArchiveJob(job: job) : .archiveJob(job: job), animation: jobAnimation)
         } label: {
             if isArchived {
                 Label("Restore", systemImage: "arrow.uturn.left")
@@ -294,7 +294,7 @@ public struct JobsListLogic: Reducer, Sendable {
         @FetchAll(
             JobApplication
                 .all
-                .where { $0.status != ApplicationStatus.archived.rawValue }
+                .where { !$0.isArchived }
                 .order { $0.dateApplied.desc() }
         )
         var activeJobApplications
@@ -303,7 +303,7 @@ public struct JobsListLogic: Reducer, Sendable {
         @FetchAll(
             JobApplication
                 .all
-                .where { $0.status == ApplicationStatus.archived.rawValue }
+                .where(\.isArchived)
                 .order { $0.dateApplied.desc() }
         )
         var archivedJobApplications
@@ -333,6 +333,8 @@ public struct JobsListLogic: Reducer, Sendable {
         case onEditButtonTapped(JobApplication)
         case onAddApplicationTapped
         case onDeleteButtonTapped(JobApplication)
+        case archiveJob(job: JobApplication)
+        case unArchiveJob(job: JobApplication)
         case updateJobStatus(job: JobApplication, status: ApplicationStatus)
         case saveJob(job: JobApplication)
         case scheduleNotification(JobApplication)
@@ -401,13 +403,30 @@ public struct JobsListLogic: Reducer, Sendable {
                         try JobApplication.update(updatedJob).execute(db)
                     }
                     
-                    if let id = job.id, status == .declined || status == .archived {
+                    if let id = job.id, status == .declined {
                         notificationManager.cancelNotification("\(id)")
                     }
+                }
+                
+            case let .archiveJob(job: job):
+                return .run { _ in
                     
-                    let wasArchived = job.status == ApplicationStatus.archived.rawValue
+                    try await database.write { db in
+                        var updatedJob = job
+                        updatedJob.isArchived = true
+                        try JobApplication.update(updatedJob).execute(db)
+                    }
+                }
+                
+            case let .unArchiveJob(job: job):
+                return .run { _ in
+                    try await database.write { db in
+                        var updatedJob = job
+                        updatedJob.isArchived = false
+                        try JobApplication.update(updatedJob).execute(db)
+                    }
                     
-                    if wasArchived { try await notificationManager.scheduleFollowUpNotification(job) }
+                    if job.status == ApplicationStatus.applied.rawValue { try await notificationManager.scheduleFollowUpNotification(job) }
                 }
                 
             case let .saveJob(job: job):
