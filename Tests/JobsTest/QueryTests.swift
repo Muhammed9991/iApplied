@@ -4,21 +4,39 @@ import StructuredQueries
 import StructuredQueriesTestSupport
 import Testing
 
-@Suite(.snapshots(record: .failed))
+//@Suite(.snapshots(record: .failed))
 struct QueryTests {
     @Test
     func getAllJobApplicationsExcludingArchived() {
         assertInlineSnapshot(
             of: JobApplication
                 .all
-                .where { $0.status != ApplicationStatus.archived.rawValue }
+                .where { !$0.isArchived }
                 .order { $0.dateApplied.desc() },
             as: .sql
         ) {
             """
-            SELECT "jobApplications"."id", "jobApplications"."title", "jobApplications"."company", "jobApplications"."createdAt", "jobApplications"."dateApplied", "jobApplications"."status", "jobApplications"."notes", "jobApplications"."lastFollowUpDate"
+            SELECT "jobApplications"."id", "jobApplications"."title", "jobApplications"."company", "jobApplications"."createdAt", "jobApplications"."dateApplied", "jobApplications"."status", "jobApplications"."notes", "jobApplications"."lastFollowUpDate", "jobApplications"."isArchived"
             FROM "jobApplications"
-            WHERE ("jobApplications"."status" <> 'Archived')
+            WHERE NOT ("jobApplications"."isArchived")
+            ORDER BY "jobApplications"."dateApplied" DESC
+            """
+        }
+    }
+
+    @Test
+    func getAllArchivedApplications() {
+        assertInlineSnapshot(
+            of: JobApplication
+                .all
+                .where(\.isArchived)
+                .order { $0.dateApplied.desc() },
+            as: .sql
+        ) {
+            """
+            SELECT "jobApplications"."id", "jobApplications"."title", "jobApplications"."company", "jobApplications"."createdAt", "jobApplications"."dateApplied", "jobApplications"."status", "jobApplications"."notes", "jobApplications"."lastFollowUpDate", "jobApplications"."isArchived"
+            FROM "jobApplications"
+            WHERE "jobApplications"."isArchived"
             ORDER BY "jobApplications"."dateApplied" DESC
             """
         }

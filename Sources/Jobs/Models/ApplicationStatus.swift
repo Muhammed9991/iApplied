@@ -8,7 +8,6 @@ public enum ApplicationStatus: String, CaseIterable, Codable, Sendable, Equatabl
     case interview = "Interview"
     case offer = "Offer"
     case declined = "Declined"
-    case archived = "Archived"
 
     public var color: Color {
         switch self {
@@ -16,7 +15,6 @@ public enum ApplicationStatus: String, CaseIterable, Codable, Sendable, Equatabl
         case .interview: AppColors.Status.interview
         case .offer: AppColors.Status.offer
         case .declined: AppColors.Status.declined
-        case .archived: AppColors.Status.archived
         }
     }
 
@@ -28,7 +26,6 @@ public enum ApplicationStatus: String, CaseIterable, Codable, Sendable, Equatabl
         case "Interview": .interview
         case "Offer": .offer
         case "Declined": .declined
-        case  "Archived": .archived
         default: fatalError("Unknown status")
         }
     }

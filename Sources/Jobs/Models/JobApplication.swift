@@ -14,6 +14,7 @@ public struct JobApplication: Identifiable, Sendable, Equatable {
     var status: String
     var notes: String?
     @Column(as: Date.ISO8601Representation?.self) var lastFollowUpDate: Date?
+    var isArchived: Bool = false
 
     var daysSinceApplied: Int { Calendar.current.dateComponents([.day], from: dateApplied, to: Date()).day ?? 0 }
 }
