@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -10,6 +10,8 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(name: "Theme", targets: ["Theme"]),
         .library(name: "Jobs", targets: ["Jobs"]),
+        .library(name: "Models", targets: ["Models"]),
+        .library(name: "AppDatabase", targets: ["AppDatabase"]),
     ],
 
     dependencies: [
@@ -18,15 +20,19 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.19.1"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.18.3"),
         .package(url: "https://github.com/pointfreeco/swift-structured-queries", from: "0.1.1"),
+        .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.9.2"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
+
         .target(name: "Theme"),
         .target(
             name: "Jobs",
             dependencies: [
+                "AppDatabase",
                 "Theme",
+                "Models",
                 .product(name: "SwiftUINavigation", package: "swift-navigation"),
                 .product(name: "SharingGRDB", package: "sharing-grdb"),
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
@@ -39,6 +45,22 @@ let package = Package(
                 .product(name: "InlineSnapshotTesting", package: "swift-snapshot-testing"),
                 .product(name: "StructuredQueries", package: "swift-structured-queries"),
                 .product(name: "StructuredQueriesTestSupport", package: "swift-structured-queries"),
+            ]
+        ),
+        .target(
+            name: "Models",
+            dependencies: [
+                "Theme",
+                .product(name: "SharingGRDB", package: "sharing-grdb"),
+            ]
+        ),
+
+        .target(
+            name: "AppDatabase",
+            dependencies: [
+                "Models",
+                .product(name: "SharingGRDB", package: "sharing-grdb"),
+                .product(name: "Dependencies", package: "swift-dependencies"),
             ]
         ),
     ]

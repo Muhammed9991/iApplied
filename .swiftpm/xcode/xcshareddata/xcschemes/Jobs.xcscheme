@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1610"
+   LastUpgradeVersion = "1630"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -18,20 +18,6 @@
                BlueprintIdentifier = "Jobs"
                BuildableName = "Jobs"
                BlueprintName = "Jobs"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "JobsTest"
-               BuildableName = "JobsTest"
-               BlueprintName = "JobsTest"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>

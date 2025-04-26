@@ -1,6 +1,7 @@
 //  Created by Muhammed Mahmood on 19/04/2025.
 
 import ComposableArchitecture
+import Models
 import SwiftUI
 import Theme
 

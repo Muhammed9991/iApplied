@@ -19,8 +19,8 @@ public enum ApplicationStatus: String, CaseIterable, Codable, Sendable, Equatabl
     }
 
     var needsFollowUp: Bool { self == .applied }
-    
-    static func toApplicationStatus(from string: String) -> Self {
+
+    public static func toApplicationStatus(from string: String) -> Self {
         switch string {
         case "Applied": .applied
         case "Interview": .interview

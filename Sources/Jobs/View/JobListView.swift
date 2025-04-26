@@ -1,6 +1,8 @@
 //  Created by Muhammed Mahmood on 19/04/2025.
 
+import AppDatabase
 import ComposableArchitecture
+import Models
 import SharingGRDB
 import SwiftUI
 import SwiftUINavigation
@@ -264,7 +266,7 @@ public struct JobsListView: View {
 
 #Preview {
     _ = try! prepareDependencies {
-        $0.defaultDatabase = try appDatabase()
+        $0.defaultDatabase = try AppDatabase.appDatabase()
     }
     
     return NavigationStack {

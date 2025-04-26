@@ -2,6 +2,7 @@
 
 import Dependencies
 import Foundation
+import Models
 import UserNotifications
 
 enum NotificationType: String {
