@@ -1,6 +1,7 @@
 import Dependencies
 import Foundation
 import GRDB
+import Models
 import SharingGRDB
 
 public func appDatabase() throws -> any DatabaseWriter {

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		79435E472DBD4F450085209D /* AppDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 79435E462DBD4F450085209D /* AppDatabase */; };
 		79660B132DB57D8B005AB6FA /* SharingGRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 79660B122DB57D8B005AB6FA /* SharingGRDB */; };
 		797C340D2DB31C8B00CB4D49 /* Jobs in Frameworks */ = {isa = PBXBuildFile; productRef = 797C340C2DB31C8B00CB4D49 /* Jobs */; };
 		79BB62F42DB6314C0075739B /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 79BB62F32DB6314C0075739B /* ComposableArchitecture */; };
@@ -27,6 +28,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				79660B132DB57D8B005AB6FA /* SharingGRDB in Frameworks */,
+				79435E472DBD4F450085209D /* AppDatabase in Frameworks */,
 				797C340D2DB31C8B00CB4D49 /* Jobs in Frameworks */,
 				79BB62F42DB6314C0075739B /* ComposableArchitecture in Frameworks */,
 			);
@@ -83,6 +85,7 @@
 				797C340C2DB31C8B00CB4D49 /* Jobs */,
 				79660B122DB57D8B005AB6FA /* SharingGRDB */,
 				79BB62F32DB6314C0075739B /* ComposableArchitecture */,
+				79435E462DBD4F450085209D /* AppDatabase */,
 			);
 			productName = SampleProject;
 			productReference = 09FF2A452C3694080047D325 /* ApplyPal.app */;
@@ -376,6 +379,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		79435E462DBD4F450085209D /* AppDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AppDatabase;
+		};
 		79660B122DB57D8B005AB6FA /* SharingGRDB */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 79660B112DB57D8B005AB6FA /* XCRemoteSwiftPackageReference "sharing-grdb" */;
