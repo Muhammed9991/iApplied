@@ -45,6 +45,28 @@ public enum AppColors {
         scheme == .dark ? Dark.textSecondary : Light.textSecondary
     }
 
+    public static func onSurface(for scheme: ColorScheme) -> Color {
+        switch scheme {
+        case .light:
+            return Color.black
+        case .dark:
+            return Color.white
+        @unknown default:
+            return Color.black
+        }
+    }
+
+    public static func success(for colorScheme: ColorScheme) -> Color {
+        switch colorScheme {
+        case .light:
+            return Color(red: 0.2, green: 0.8, blue: 0.2) // A green that works well in light mode
+        case .dark:
+            return Color(red: 0.3, green: 0.9, blue: 0.3) // A slightly brighter green for dark mode
+        @unknown default:
+            return Color(red: 0.2, green: 0.8, blue: 0.2)
+        }
+    }
+
     // Application status colors (more visible in dark mode)
     public enum Status {
         public static let applied = Color.blue
