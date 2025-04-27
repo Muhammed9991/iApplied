@@ -79,6 +79,10 @@ struct RootLogic: Reducer {
             switch action {
             case .jobList:
                 return .none
+
+            case .cv:
+                return .none
+
             case let .selectTab(tab):
                 state.currentTab = tab
                 return .none

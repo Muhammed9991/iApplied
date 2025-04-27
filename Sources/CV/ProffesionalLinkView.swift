@@ -5,14 +5,14 @@ import SwiftUI
 import Theme
 
 @Reducer
-struct ProfessionalLinkLogic: Reducer {
+public struct ProfessionalLinkLogic: Reducer, Sendable {
     enum Viewmode: Equatable, Sendable {
         case add
         case edit
     }
 
     @ObservableState
-    struct State: Equatable, Sendable {
+    public struct State: Equatable, Sendable {
         var viewMode: Viewmode
         var titleTextFieldError: TextFieldError?
         var linkFieldError: TextFieldError?
@@ -22,12 +22,12 @@ struct ProfessionalLinkLogic: Reducer {
         var iconOptions = ["link", "network", "terminal", "doc.text", "briefcase", "globe", "person.circle"]
     }
 
-    enum Action: Equatable, Sendable, BindableAction {
+    public enum Action: Equatable, Sendable, BindableAction {
         case binding(BindingAction<State>)
         case onButtonTapped
         case delegate(Delegate)
 
-        enum Delegate: Equatable, Sendable {
+        public enum Delegate: Equatable, Sendable {
             case onButtonTapped(CVLink)
         }
     }
@@ -35,7 +35,7 @@ struct ProfessionalLinkLogic: Reducer {
     @Dependency(\.dismiss) var dismiss
     @Dependency(\.uuid) var uuid
 
-    var body: some Reducer<State, Action> {
+    public var body: some Reducer<State, Action> {
         BindingReducer()
         Reduce<State, Action> { state, action in
             switch action {

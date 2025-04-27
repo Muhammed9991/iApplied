@@ -22,7 +22,7 @@ public struct CVTabView: View {
                 Spacer()
                 
                 Button {
-                    // TODO: Handle adding new link
+                    store.send(.addProfessionalLinkButtonTapped)
                 } label: {
                     Image(systemName: "plus")
                         .foregroundColor(AppColors.primary(for: colorScheme))
@@ -50,6 +50,10 @@ public struct CVTabView: View {
                 }
             }
         }
+        .padding(.top, 12)
+        .sheet(item: $store.scope(state: \.destination?.professionalLink, action: \.destination.professionalLink)) { professionalLinkStore in
+            ProfessionalLinkView(store: professionalLinkStore)
+        }
     }
 }
 
@@ -64,27 +68,50 @@ public struct CVTabView: View {
 public struct CVLogic {
     public init() {}
     
+    @Reducer(state: .equatable, .sendable, action: .equatable, .sendable)
+    public enum Destination {
+        case professionalLink(ProfessionalLinkLogic)
+    }
+    
     @ObservableState
     public struct State: Equatable {
         var cvLinks: IdentifiedArrayOf<CVLinkItemLogic.State> = []
         var linkBeingAdded: UUID? = nil
+        @Presents var destination: Destination.State?
+        
+        public init(
+            cvLinks: IdentifiedArrayOf<CVLinkItemLogic.State> = [],
+            linkBeingAdded: UUID? = nil,
+            destination: Destination.State? = nil
+        ) {
+            self.cvLinks = cvLinks
+            self.linkBeingAdded = linkBeingAdded
+            self.destination = destination
+        }
     }
     
     public enum Action: BindableAction {
         case binding(BindingAction<State>)
         case cvLinks(IdentifiedActionOf<CVLinkItemLogic>)
+        case destination(PresentationAction<Destination.Action>)
+        case addProfessionalLinkButtonTapped
     }
     
-    public var body: some ReducerOf<Self> {
-        Reduce { _, action in
+    public var body: some Reducer<State, Action> {
+        Reduce<State, Action> { state, action in
             switch action {
-            case .binding, .cvLinks:
-                .none
+            case .addProfessionalLinkButtonTapped:
+                state.destination = .professionalLink(.init(viewMode: .add))
+                return .none
+                
+            case .binding, .cvLinks, .destination:
+                return .none
             }
         }
         .forEach(\.cvLinks, action: \.cvLinks) {
             CVLinkItemLogic()
         }
+        .ifLet(\.$destination, action: \.destination)
     }
 }
 
