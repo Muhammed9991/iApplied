@@ -1,6 +1,7 @@
 //  Created by Muhammed Mahmood on 27/04/2025.
 
 import ComposableArchitecture
+import Models
 import SwiftUI
 import Theme
 
@@ -28,7 +29,7 @@ public struct ProfessionalLinkLogic: Reducer, Sendable {
         case delegate(Delegate)
 
         public enum Delegate: Equatable, Sendable {
-            case onButtonTapped(CVLink)
+            case onButtonTapped(ProfessionalLink)
         }
     }
 
@@ -51,16 +52,18 @@ public struct ProfessionalLinkLogic: Reducer, Sendable {
                 }
                 state.titleTextFieldError = nil
                 state.linkFieldError = nil
+                
+                // TODO: handle edit and add here using @Dependency(\.database)
 
-                let newLink = CVLink(
-                    id: uuid(),
-                    title: state.title,
-                    url: state.urlString,
-                    iconName: state.iconName
-                )
+//                let newLink = ProfessionalLink(
+//                    id: uuid(),
+//                    title: state.title,
+//                    url: state.urlString,
+//                    iconName: state.iconName
+//                )
 
                 return .run { send in
-                    await send(.delegate(.onButtonTapped(newLink)))
+//                    await send(.delegate(.onButtonTapped(newLink)))
                     await dismiss()
                 }
 

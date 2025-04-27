@@ -43,6 +43,7 @@ let package = Package(
         .target(
             name: "CV",
             dependencies: [
+                "AppDatabase",
                 "Theme",
                 "Models",
                 .product(name: "SwiftUINavigation", package: "swift-navigation"),

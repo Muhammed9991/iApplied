@@ -1,45 +1,27 @@
 //  Created by Muhammed Mahmood on 27/04/2025.
 
 import ComposableArchitecture
+import Models
 import SwiftUI
 import Theme
 
-@Reducer
-public struct CVLinkItemLogic: Reducer {
-    @ObservableState
-    public struct State: Equatable, Sendable, Identifiable {
-        public var id: UUID
-        var title: String
-        var url: URL
-        var iconName: String
-    }
-    
-    public enum Action: Equatable, Sendable {}
-    
-    public var body: some Reducer<State, Action> {
-        Reduce { _, _ in
-//            switch action {
-            .none
-//            }
-        }
-    }
-}
-
 struct CVLinkItem: View {
-    let store: StoreOf<CVLinkItemLogic>
+    let professionalLink: ProfessionalLink
     @Environment(\.colorScheme) var colorScheme
+    var onItemTapped: (ProfessionalLink) -> Void
+    var onDeleteButtonTapped: (ProfessionalLink) -> Void
     
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            Image(systemName: store.iconName)
+            Image(systemName: professionalLink.image)
                 .foregroundColor(AppColors.accent(for: colorScheme))
                 
             VStack(alignment: .leading, spacing: 4) {
-                Text(store.title)
+                Text(professionalLink.title)
                     .font(AppTypography.body)
                     .foregroundColor(AppColors.primary(for: colorScheme))
                     
-                Text(store.url.absoluteString)
+                Text(professionalLink.link)
                     .font(AppTypography.caption)
                     .foregroundColor(.secondary)
             }
@@ -47,7 +29,7 @@ struct CVLinkItem: View {
             Spacer()
                 
             Button {
-                UIPasteboard.general.string = store.url.absoluteString
+                UIPasteboard.general.string = professionalLink.link
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "doc.on.doc")
@@ -63,21 +45,35 @@ struct CVLinkItem: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            // TODO: Open EditLinkView
+            onItemTapped(professionalLink)
         }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
-                // TODO: Handle delete
+                onDeleteButtonTapped(professionalLink)
             } label: {
                 Label("Delete", systemImage: "trash")
             }
                 
             Button {
-                // TODO: Open EditLinkView
+                onItemTapped(professionalLink)
             } label: {
                 Label("Edit", systemImage: "pencil")
             }
             .tint(AppColors.accent(for: colorScheme))
         }
     }
+}
+
+#Preview {
+    CVLinkItem(
+        professionalLink: ProfessionalLink(
+            id: 1,
+            createdAt: Date(),
+            title: "Github",
+            link: "https/www.github.com",
+            image: "terminal"
+        ),
+        onItemTapped: { _ in },
+        onDeleteButtonTapped: { _ in }
+    )
 }

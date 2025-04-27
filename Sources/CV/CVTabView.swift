@@ -1,6 +1,9 @@
 //  Created by Muhammed Mahmood on 27/04/2025.
 
+import AppDatabase
 import ComposableArchitecture
+import Models
+import SharingGRDB
 import SwiftUI
 import Theme
 
@@ -30,38 +33,53 @@ public struct CVTabView: View {
             }
             .padding(.horizontal)
             
-            ScrollView {
-                if store.cvLinks.isEmpty {
+            if store.professionalLinks.isEmpty {
+                ScrollView {
                     Text("Add your professional links using the + button")
                         .font(.body)
                         .foregroundColor(.secondary)
                         .italic()
                         .padding()
-                } else {
-                    List {
-                        ForEach(store.scope(state: \.cvLinks, action: \.cvLinks)) { store in
-                            CVLinkItem(store: store)
-                        }
-                        .listStyle(.plain)
-                        .padding(.horizontal, -16)
-                    }
-                    .listRowSeparator(.visible)
-                    .listRowBackground(Color.clear)
                 }
+            } else {
+                List {
+                    ForEach(store.professionalLinks) { link in
+                        CVLinkItem(
+                            professionalLink: link,
+                            onItemTapped: { link in
+                                store.send(.onLinkTapped(link))
+                            }, onDeleteButtonTapped: { _ in
+                                // TODO:
+                            }
+                        )
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .listRowBackground(AppColors.background(for: colorScheme))
+                    }
+                }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(AppColors.background(for: colorScheme))
             }
         }
         .padding(.top, 12)
         .sheet(item: $store.scope(state: \.destination?.professionalLink, action: \.destination.professionalLink)) { professionalLinkStore in
             ProfessionalLinkView(store: professionalLinkStore)
         }
+        .background(AppColors.background(for: colorScheme))
     }
 }
 
 #Preview {
-    CVTabView(store: Store(
-        initialState: CVLogic.State(),
-        reducer: { CVLogic() }
-    ))
+    _ = try! prepareDependencies {
+        $0.defaultDatabase = try AppDatabase.appDatabase()
+    }
+    
+    return NavigationStack {
+        CVTabView(store: Store(
+            initialState: CVLogic.State(),
+            reducer: { CVLogic() }
+        ))
+    }
 }
 
 @Reducer
@@ -75,60 +93,45 @@ public struct CVLogic {
     
     @ObservableState
     public struct State: Equatable {
-        var cvLinks: IdentifiedArrayOf<CVLinkItemLogic.State> = []
-        var linkBeingAdded: UUID? = nil
         @Presents var destination: Destination.State?
         
-        public init(
-            cvLinks: IdentifiedArrayOf<CVLinkItemLogic.State> = [],
-            linkBeingAdded: UUID? = nil,
-            destination: Destination.State? = nil
-        ) {
-            self.cvLinks = cvLinks
-            self.linkBeingAdded = linkBeingAdded
+        @ObservationStateIgnored
+        @FetchAll(ProfessionalLink.all)
+        var professionalLinks
+        
+        public init(destination: Destination.State? = nil) {
             self.destination = destination
         }
     }
     
     public enum Action: BindableAction {
         case binding(BindingAction<State>)
-        case cvLinks(IdentifiedActionOf<CVLinkItemLogic>)
         case destination(PresentationAction<Destination.Action>)
         case addProfessionalLinkButtonTapped
+        case onLinkTapped(ProfessionalLink)
     }
     
     public var body: some Reducer<State, Action> {
+        BindingReducer()
         Reduce<State, Action> { state, action in
             switch action {
             case .addProfessionalLinkButtonTapped:
                 state.destination = .professionalLink(.init(viewMode: .add))
                 return .none
                 
-            case .binding, .cvLinks, .destination:
+            case let .onLinkTapped(professionalLink):
+                state.destination = .professionalLink(.init(
+                    viewMode: .edit,
+                    title: professionalLink.title,
+                    urlString: professionalLink.link,
+                    iconName: professionalLink.image
+                ))
+                return .none
+                
+            case .binding, .destination:
                 return .none
             }
         }
-        .forEach(\.cvLinks, action: \.cvLinks) {
-            CVLinkItemLogic()
-        }
         .ifLet(\.$destination, action: \.destination)
-    }
-}
-
-// TODO: needs to be removed see CVLinkLogic
-public struct CVLink: Identifiable, Codable, Equatable, Sendable {
-    public var id: UUID
-    var title: String
-    var url: String
-    var iconName: String
-    
-    static let defaultLinks = [
-        CVLink(id: UUID(), title: "GitHub", url: "https://github.com", iconName: "terminal"),
-        CVLink(id: UUID(), title: "LinkedIn", url: "https://linkedin.com", iconName: "network"),
-        CVLink(id: UUID(), title: "Portfolio", url: "https://portfolio.com", iconName: "doc.text")
-    ]
-    
-    static var example: CVLink {
-        CVLink(id: UUID(), title: "GitHub", url: "https://github.com/johndoe", iconName: "terminal")
     }
 }
