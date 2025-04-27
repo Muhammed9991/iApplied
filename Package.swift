@@ -12,6 +12,7 @@ let package = Package(
         .library(name: "Jobs", targets: ["Jobs"]),
         .library(name: "Models", targets: ["Models"]),
         .library(name: "AppDatabase", targets: ["AppDatabase"]),
+        .library(name: "Root", targets: ["Root"]),
     ],
 
     dependencies: [
@@ -25,6 +26,14 @@ let package = Package(
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
+        .target(
+            name: "Root",
+            dependencies: [
+                "AppDatabase",
+                "Jobs",
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+            ]
+        ),
 
         .target(name: "Theme"),
         .target(
