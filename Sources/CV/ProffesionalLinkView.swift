@@ -138,14 +138,6 @@ struct ProfessionalLinkView: View {
             }
         }
     }
-
-    private func isValidURL(_ string: String) -> Bool {
-        // Simple validation to check if the URL is potentially valid
-        if let url = URL(string: string), url.scheme != nil, url.host != nil {
-            return true
-        }
-        return false
-    }
 }
 
 #Preview("Add Link View") {
