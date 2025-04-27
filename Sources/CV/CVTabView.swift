@@ -60,76 +60,19 @@ public struct CVTabView: View {
     ))
 }
 
-struct CVLinkItem: View {
-    let store: StoreOf<CVLinkLogic>
-    @Environment(\.colorScheme) var colorScheme
-    
-    var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            Image(systemName: store.iconName)
-                .foregroundColor(AppColors.accent(for: colorScheme))
-                
-            VStack(alignment: .leading, spacing: 4) {
-                Text(store.title)
-                    .font(AppTypography.body)
-                    .foregroundColor(AppColors.primary(for: colorScheme))
-                    
-                Text(store.url.absoluteString)
-                    .font(AppTypography.caption)
-                    .foregroundColor(.secondary)
-            }
-                
-            Spacer()
-                
-            Button {
-                // TODO: Handle copy
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "doc.on.doc")
-                    Text("Copy")
-                        .font(AppTypography.caption)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(AppColors.accent(for: colorScheme).opacity(0.1))
-                .foregroundColor(AppColors.accent(for: colorScheme))
-                .cornerRadius(4)
-            }
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            // TODO: Handle update
-        }
-        .swipeActions(edge: .trailing) {
-            Button(role: .destructive) {
-                // TODO: Handle delete
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-                
-            Button {
-                // TODO: Handle update
-            } label: {
-                Label("Edit", systemImage: "pencil")
-            }
-            .tint(AppColors.accent(for: colorScheme))
-        }
-    }
-}
-
 @Reducer
 public struct CVLogic {
     public init() {}
     
     @ObservableState
     public struct State: Equatable {
-        var cvLinks: IdentifiedArrayOf<CVLinkLogic.State> = []
+        var cvLinks: IdentifiedArrayOf<CVLinkItemLogic.State> = []
         var linkBeingAdded: UUID? = nil
     }
     
     public enum Action: BindableAction {
         case binding(BindingAction<State>)
-        case cvLinks(IdentifiedActionOf<CVLinkLogic>)
+        case cvLinks(IdentifiedActionOf<CVLinkItemLogic>)
     }
     
     public var body: some ReducerOf<Self> {
@@ -140,7 +83,7 @@ public struct CVLogic {
             }
         }
         .forEach(\.cvLinks, action: \.cvLinks) {
-            CVLinkLogic()
+            CVLinkItemLogic()
         }
     }
 }
