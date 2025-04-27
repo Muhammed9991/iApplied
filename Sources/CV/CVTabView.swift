@@ -92,37 +92,16 @@ public struct CVLogic {
 public struct CVLink: Identifiable, Codable, Equatable, Sendable {
     public var id: UUID
     var title: String
-    var url: URL
+    var url: String
     var iconName: String
     
     static let defaultLinks = [
-        CVLink(id: UUID(), title: "GitHub", url: URL(string: "https://github.com")!, iconName: "terminal"),
-        CVLink(id: UUID(), title: "LinkedIn", url: URL(string: "https://linkedin.com")!, iconName: "network"),
-        CVLink(id: UUID(), title: "Portfolio", url: URL(string: "https://portfolio.com")!, iconName: "doc.text")
+        CVLink(id: UUID(), title: "GitHub", url: "https://github.com", iconName: "terminal"),
+        CVLink(id: UUID(), title: "LinkedIn", url: "https://linkedin.com", iconName: "network"),
+        CVLink(id: UUID(), title: "Portfolio", url: "https://portfolio.com", iconName: "doc.text")
     ]
     
     static var example: CVLink {
-        CVLink(id: UUID(), title: "GitHub", url: URL(string: "https://github.com/johndoe")!, iconName: "terminal")
-    }
-}
-
-@Reducer
-public struct CVLinkLogic: Reducer {
-    @ObservableState
-    public struct State: Equatable, Sendable, Identifiable {
-        public var id: UUID
-        var title: String
-        var url: URL
-        var iconName: String
-    }
-    
-    public enum Action: Equatable, Sendable {}
-    
-    public var body: some Reducer<State, Action> {
-        Reduce { _, _ in
-//            switch action {
-            .none
-//            }
-        }
+        CVLink(id: UUID(), title: "GitHub", url: "https://github.com/johndoe", iconName: "terminal")
     }
 }
