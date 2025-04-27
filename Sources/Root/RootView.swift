@@ -2,6 +2,7 @@
 
 import AppDatabase
 import ComposableArchitecture
+import CV
 import Jobs
 import SwiftUI
 import Theme
@@ -85,14 +86,3 @@ struct RootLogic: Reducer {
         }
     }
 }
-
-// TODO: move to its own library in another ticket
-struct CVTabView: View {
-    let store: StoreOf<CVLogic>
-    var body: some View {
-        Text("Hello World")
-    }
-}
-
-@Reducer
-struct CVLogic {}
