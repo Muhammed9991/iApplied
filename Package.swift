@@ -31,6 +31,7 @@ let package = Package(
             dependencies: [
                 "AppDatabase",
                 "Jobs",
+                "Theme",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ]
         ),

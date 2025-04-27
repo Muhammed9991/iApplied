@@ -45,7 +45,6 @@ public struct JobsListView: View {
                     Spacer(minLength: 0)
                 }
             }
-            .navigationTitle("Applications")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 leadingToolbarItems
