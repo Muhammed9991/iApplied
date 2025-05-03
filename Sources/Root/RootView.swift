@@ -22,30 +22,21 @@ public struct RootView: View {
 
     public var body: some View {
         TabView(selection: $store.currentTab.sending(\.selectTab)) {
-            JobsListView(
-                store: store.scope(state: \.jobList, action: \.jobList)
-            )
-            .tag(RootLogic.Tab.jobList)
-            .tabItem {
-                Label("Jobs", systemImage: "briefcase")
-            }
+            JobsListView(store: store.scope(state: \.jobList, action: \.jobList))
+                .tag(RootLogic.Tab.jobList)
+                .tabItem {
+                    Label("Jobs", systemImage: "briefcase")
+                }
 
-            CVTabView(
-                store: store.scope(state: \.cv, action: \.cv)
-            )
-            .tag(RootLogic.Tab.cv)
-            .tabItem {
-                Label("CV", systemImage: "doc.text")
-            }
+            CVTabView(store: store.scope(state: \.cv, action: \.cv))
+                .tag(RootLogic.Tab.cv)
+                .tabItem {
+                    Label("CV", systemImage: "doc.text")
+                }
         }
         .accentColor(AppColors.accent(for: colorScheme))
-        .onAppear {
-            // TODO: Request notification permissions when the app appears
-//            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
-//                if let error = error {
-//                    print("Error requesting notification permissions: \(error)")
-//                }
-//            }
+        .task {
+            store.send(.checNotificationkAuthorisation)
         }
     }
 }
@@ -59,12 +50,15 @@ struct RootLogic: Reducer {
         var currentTab = Tab.jobList
         var jobList = JobsListLogic.State()
         var cv = CVLogic.State()
+        var isAuthorisedForNotifications: Bool = false
     }
 
-    enum Action {
+    enum Action: Equatable, Sendable {
         case jobList(JobsListLogic.Action)
         case cv(CVLogic.Action)
         case selectTab(Tab)
+        case checNotificationkAuthorisation
+        case setNotificationAuthorisation(Bool)
     }
 
     var body: some Reducer<State, Action> {
@@ -77,6 +71,40 @@ struct RootLogic: Reducer {
 
         Reduce<State, Action> { state, action in
             switch action {
+            case .checNotificationkAuthorisation:
+                // TODO: Ideally this should have better check. If .notDetermined only then it should continue
+                guard  !state.isAuthorisedForNotifications else {
+                    return .none
+                }
+                return .run { send in
+                    let center = UNUserNotificationCenter.current()
+                    let settings = await center.notificationSettings()
+
+                    var isAuthorisedForNotifications = false
+                    switch settings.authorizationStatus {
+                    case .authorized, .provisional:
+                        isAuthorisedForNotifications = true
+                    case .notDetermined:
+                        do {
+                            let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
+                            isAuthorisedForNotifications = granted
+                        } catch {
+                            isAuthorisedForNotifications = false
+                            print("Authorization request failed: \(error)")
+                        }
+                    case .denied, .ephemeral:
+                        isAuthorisedForNotifications = false
+                    @unknown default:
+                        isAuthorisedForNotifications = false
+                    }
+
+                    await send(.setNotificationAuthorisation(isAuthorisedForNotifications))
+                }
+
+            case let .setNotificationAuthorisation(isAuthorisedForNotifications):
+                state.isAuthorisedForNotifications = isAuthorisedForNotifications
+                return .none
+
             case .jobList:
                 return .none
 

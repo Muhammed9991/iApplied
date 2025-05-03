@@ -108,7 +108,7 @@ public struct CVLogic: Sendable {
         }
     }
     
-    public enum Action: BindableAction {
+    public enum Action: BindableAction, Equatable, Sendable {
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
         case addProfessionalLinkButtonTapped
