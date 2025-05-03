@@ -4,6 +4,7 @@ import AppDatabase
 import ComposableArchitecture
 import CV
 import Jobs
+import OSLog
 import SwiftUI
 import Theme
 
@@ -73,10 +74,11 @@ struct RootLogic: Reducer {
             switch action {
             case .checNotificationkAuthorisation:
                 // TODO: Ideally this should have better check. If .notDetermined only then it should continue
-                guard  !state.isAuthorisedForNotifications else {
+                guard !state.isAuthorisedForNotifications else {
                     return .none
                 }
                 return .run { send in
+                    // TODO: this should be moved to a dependency
                     let center = UNUserNotificationCenter.current()
                     let settings = await center.notificationSettings()
 
@@ -90,7 +92,7 @@ struct RootLogic: Reducer {
                             isAuthorisedForNotifications = granted
                         } catch {
                             isAuthorisedForNotifications = false
-                            print("Authorization request failed: \(error)")
+                            Logger.root.debug("Authorization request failed: \(error)")
                         }
                     case .denied, .ephemeral:
                         isAuthorisedForNotifications = false

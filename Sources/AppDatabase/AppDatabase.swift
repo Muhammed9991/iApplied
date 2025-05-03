@@ -3,6 +3,7 @@ import Foundation
 import GRDB
 import Models
 import SharingGRDB
+import OSLog
 
 public func appDatabase() throws -> any DatabaseWriter {
     let database: any DatabaseWriter
@@ -11,15 +12,15 @@ public func appDatabase() throws -> any DatabaseWriter {
     configuration.prepareDatabase { db in
         #if DEBUG
             db.trace(options: .profile) {
-                print($0.expandedDescription)
+                Logger.appDatabase.debug("\($0.expandedDescription)")
             }
         #endif
     }
     @Dependency(\.context) var context
     if context == .live {
         let path = URL.documentsDirectory.appending(component: "db.sqlite").path()
-        print("sqlite3", path)
-        print("open", path)
+        Logger.appDatabase.debug("sqlite3 \(path)")
+        Logger.appDatabase.debug("open \(path)")
         database = try DatabasePool(path: path, configuration: configuration)
     } else {
         database = try DatabaseQueue(configuration: configuration)

@@ -4,6 +4,7 @@ import Dependencies
 import Foundation
 import Models
 import UserNotifications
+import OSLog
 
 enum NotificationType: String {
     case followUp
@@ -51,7 +52,6 @@ extension NotificationManager: DependencyKey {
         
         @Sendable func cancelNotification(withIdentifier identifier: String) {
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier])
-            print("Cancelled notification with identifier: \(identifier)")
         }
         
         @Sendable func scheduleNotification(config: NotificationConfig, completion: ((Error?) -> Void)? = nil) async throws {
@@ -72,7 +72,7 @@ extension NotificationManager: DependencyKey {
             let request = UNNotificationRequest(identifier: config.identifier, content: content, trigger: trigger)
             
             try await UNUserNotificationCenter.current().add(request)
-            print("Succesfully scheduled notification for \(config.title) at \(notificationDate)")
+            Logger.jobs.debug("Succesfully scheduled notification for \(config.title) at \(notificationDate)")
         }
         
         return Self {
@@ -80,9 +80,11 @@ extension NotificationManager: DependencyKey {
             
         } cancelNotification: { identifier in
             cancelNotification(withIdentifier: identifier)
+            Logger.jobs.debug("Cancelled notification with identifier: \(identifier)")
             
         } cancelAllNotifications: {
             UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+            Logger.jobs.debug("Cancelled all notifications")
             
         } scheduleFollowUpNotification: { jobApplication in
             precondition(jobApplication.id != nil, "Bruh how would this even be possible?")
