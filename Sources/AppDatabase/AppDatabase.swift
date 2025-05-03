@@ -63,6 +63,22 @@ public func appDatabase() throws -> any DatabaseWriter {
             .execute(db)
     }
 
+    migrator.registerMigration("Add professionalLink table") { db in
+        try db.create(table: ProfessionalLink.tableName) { table in
+            table.autoIncrementedPrimaryKey("id")
+            table.column("createdAt", .datetime).defaults(sql: "CURRENT_TIMESTAMP")
+            table.column("title", .text).notNull()
+            table.column("link", .text).notNull()
+            table.column("image", .text).notNull()
+        }
+    }
+
+    #if DEBUG
+        migrator.registerMigration("Add mock professional links data") { db in
+            try db.createMockProfessionalLinksData()
+        }
+    #endif
+
     try migrator.migrate(database)
 
     return database
@@ -96,6 +112,25 @@ public func appDatabase() throws -> any DatabaseWriter {
                         status: status,
                         notes: "Applied for \(title) position at \(company). Waiting for response.",
                         isArchived: false
+                    )
+                }
+            }
+        }
+
+        func createMockProfessionalLinksData() throws {
+            let currentDate = Date()
+
+            let links: [(Date, String, String, String)] = [
+                (currentDate, "GitHub", "https://github.com", "terminal")
+            ]
+
+            for (createdAt, title, link, image) in links {
+                try seed {
+                    ProfessionalLink(
+                        createdAt: createdAt,
+                        title: title,
+                        link: link,
+                        image: image
                     )
                 }
             }

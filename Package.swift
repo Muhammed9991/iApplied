@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "Models", targets: ["Models"]),
         .library(name: "AppDatabase", targets: ["AppDatabase"]),
         .library(name: "Root", targets: ["Root"]),
+        .library(name: "CV", targets: ["CV"]),
     ],
 
     dependencies: [
@@ -31,12 +32,26 @@ let package = Package(
             dependencies: [
                 "AppDatabase",
                 "Jobs",
+                "CV",
                 "Theme",
-                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
             ]
         ),
 
         .target(name: "Theme"),
+
+        .target(
+            name: "CV",
+            dependencies: [
+                "AppDatabase",
+                "Theme",
+                "Models",
+                .product(name: "SwiftUINavigation", package: "swift-navigation"),
+                .product(name: "SharingGRDB", package: "sharing-grdb"),
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+            ]
+        ),
+
         .target(
             name: "Jobs",
             dependencies: [

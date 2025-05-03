@@ -177,10 +177,10 @@ public struct JobFormLogic: Reducer, Sendable {
                 guard !state.title.isEmpty, !state.company.isEmpty else { return .none }
 
                 let job = JobApplication(
-                    id: state.jobApplication?.id ?? 1,
+                    id: state.jobApplication?.id,
                     title: state.title,
                     company: state.company,
-                    createdAt: now,
+                    createdAt: state.jobApplication?.createdAt ?? now,
                     dateApplied: state.dateApplied,
                     status: state.status.rawValue,
                     notes: state.notes.isEmpty ? nil : state.notes,
