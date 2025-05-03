@@ -34,6 +34,12 @@ public struct RootView: View {
                 .tabItem {
                     Label("CV", systemImage: "doc.text")
                 }
+
+            SettingsView()
+                .tag(RootLogic.Tab.settings)
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
         }
         .accentColor(AppColors.accent(for: colorScheme))
         .task {
@@ -44,7 +50,7 @@ public struct RootView: View {
 
 @Reducer
 struct RootLogic: Reducer {
-    enum Tab: Equatable { case jobList, cv }
+    enum Tab: Equatable { case jobList, cv, settings }
 
     @ObservableState
     struct State: Equatable {
@@ -107,10 +113,7 @@ struct RootLogic: Reducer {
                 state.isAuthorisedForNotifications = isAuthorisedForNotifications
                 return .none
 
-            case .jobList:
-                return .none
-
-            case .cv:
+            case .cv, .jobList:
                 return .none
 
             case let .selectTab(tab):

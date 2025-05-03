@@ -35,7 +35,11 @@ let package = Package(
                 "CV",
                 "Theme",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+            ],
+            resources: [
+                .process("package-list.json")
             ]
+            
         ),
 
         .target(name: "Theme"),
