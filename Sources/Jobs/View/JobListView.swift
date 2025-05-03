@@ -337,7 +337,6 @@ public struct JobsListLogic: Reducer, Sendable {
         case archiveJob(job: JobApplication)
         case unArchiveJob(job: JobApplication)
         case updateJobStatus(job: JobApplication, status: ApplicationStatus)
-        case scheduleNotification(JobApplication)
         
         case alert(PresentationAction<Alert>)
         @CasePathable
@@ -429,11 +428,6 @@ public struct JobsListLogic: Reducer, Sendable {
                     if job.status == ApplicationStatus.applied.rawValue { try await notificationManager.scheduleFollowUpNotification(job) }
                 }
                 
-            case let .scheduleNotification(jobApplication):
-                return .run { _ in
-                    try await notificationManager.scheduleFollowUpNotification(jobApplication)
-                }
-                
             case let .destination(.presented(.jobForm(.delegate(.onSaveButtonTapped(job))))):
                 
                 return .run { [jobApplications = state.activeJobApplications] send in
@@ -443,7 +437,7 @@ public struct JobsListLogic: Reducer, Sendable {
                         try await database.write { db in
                             try JobApplication.insert(job).execute(db)
                         }
-                        await send(.scheduleNotification(job))
+                        try await rescheduleAllNotifications(jobApplications: jobApplications)
                         return
                     }
                     
@@ -451,7 +445,7 @@ public struct JobsListLogic: Reducer, Sendable {
                     try await database.write { db in
                         try JobApplication.update(job).execute(db)
                     }
-                    await send(.scheduleNotification(job))
+                    try await rescheduleAllNotifications(jobApplications: jobApplications)
                 }
                 
             case .binding, .destination, .alert:
@@ -460,6 +454,19 @@ public struct JobsListLogic: Reducer, Sendable {
         }
         .ifLet(\.$destination, action: \.destination)
         .ifLet(\.$alert, action: \.alert)
+    }
+    
+    func rescheduleAllNotifications(jobApplications: [JobApplication]) async throws {
+        // HACK: When a new job is saved. We don't have access
+        // to its ID. For now cancelling all notifications and
+        // then individually re-adding all of them. Definitely
+        // needs improving
+        
+        notificationManager.cancelAllNotifications()
+        
+        for jobApplication in jobApplications {
+            try await notificationManager.scheduleFollowUpNotification(jobApplication)
+        }
     }
 }
 
