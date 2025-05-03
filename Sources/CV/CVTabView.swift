@@ -48,8 +48,8 @@ public struct CVTabView: View {
                             professionalLink: link,
                             onItemTapped: { link in
                                 store.send(.onLinkTapped(link))
-                            }, onDeleteButtonTapped: { _ in
-                                // TODO:
+                            }, onDeleteButtonTapped: { professionalLink in
+                                store.send(.onDeleteLinkItemTapped(professionalLink))
                             }
                         )
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
@@ -66,6 +66,7 @@ public struct CVTabView: View {
             ProfessionalLinkView(store: professionalLinkStore)
         }
         .background(AppColors.background(for: colorScheme))
+        .alert($store.scope(state: \.alert, action: \.alert))
     }
 }
 
@@ -83,7 +84,7 @@ public struct CVTabView: View {
 }
 
 @Reducer
-public struct CVLogic {
+public struct CVLogic: Sendable {
     public init() {}
     
     @Reducer(state: .equatable, .sendable, action: .equatable, .sendable)
@@ -99,6 +100,9 @@ public struct CVLogic {
         @FetchAll(ProfessionalLink.all)
         var professionalLinks
         
+        var professionalLink: ProfessionalLink?
+        @Presents var alert: AlertState<Action.Alert>?
+        
         public init(destination: Destination.State? = nil) {
             self.destination = destination
         }
@@ -109,8 +113,15 @@ public struct CVLogic {
         case destination(PresentationAction<Destination.Action>)
         case addProfessionalLinkButtonTapped
         case onLinkTapped(ProfessionalLink)
+        case onDeleteLinkItemTapped(ProfessionalLink)
+        case alert(PresentationAction<Alert>)
+        @CasePathable
+        public enum Alert: Equatable, Sendable {
+            case confirmDeleteLink
+        }
     }
     
+    @Dependency(\.defaultDatabase) var database
     public var body: some Reducer<State, Action> {
         BindingReducer()
         Reduce<State, Action> { state, action in
@@ -122,16 +133,60 @@ public struct CVLogic {
             case let .onLinkTapped(professionalLink):
                 state.destination = .professionalLink(.init(
                     viewMode: .edit,
+                    id: professionalLink.id,
+                    createdAt: professionalLink.createdAt,
                     title: professionalLink.title,
                     urlString: professionalLink.link,
                     iconName: professionalLink.image
                 ))
                 return .none
                 
-            case .binding, .destination:
+            case let .onDeleteLinkItemTapped(professionalLink):
+                state.professionalLink = professionalLink
+                state.alert = AlertState {
+                    TextState("Are you sure you want to delete this link?")
+                } actions: {
+                    ButtonState(role: .cancel) {
+                        TextState("Cancel")
+                    }
+                    ButtonState(role: .destructive, action: .confirmDeleteLink) {
+                        TextState("Delete")
+                    }
+                }
+                return .none
+                
+            case .alert(.presented(.confirmDeleteLink)):
+                state.alert = nil
+                return .run { [professionalLink = state.professionalLink] _ in
+                    precondition(professionalLink != nil, "How can this even be nil at this point?")
+                    try database.write { db in
+                        try ProfessionalLink.delete(professionalLink!).execute(db)
+                    }
+                }
+                
+            case let .destination(.presented(.professionalLink(.delegate(delegate)))):
+                
+                switch delegate {
+                case let .onSaveLink(professionalLink):
+                    return .run { _ in
+                        try await database.write { db in
+                            try ProfessionalLink.insert(professionalLink).execute(db)
+                        }
+                    }
+                    
+                case let .onEditLink(professionalLink):
+                    return .run { _ in
+                        try await database.write { db in
+                            try ProfessionalLink.update(professionalLink).execute(db)
+                        }
+                    }
+                }
+                
+            case .binding, .destination, .alert:
                 return .none
             }
         }
         .ifLet(\.$destination, action: \.destination)
+        .ifLet(\.$alert, action: \.alert)
     }
 }

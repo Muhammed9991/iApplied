@@ -337,7 +337,6 @@ public struct JobsListLogic: Reducer, Sendable {
         case archiveJob(job: JobApplication)
         case unArchiveJob(job: JobApplication)
         case updateJobStatus(job: JobApplication, status: ApplicationStatus)
-        case saveJob(job: JobApplication)
         case scheduleNotification(JobApplication)
         
         case alert(PresentationAction<Alert>)
@@ -430,7 +429,13 @@ public struct JobsListLogic: Reducer, Sendable {
                     if job.status == ApplicationStatus.applied.rawValue { try await notificationManager.scheduleFollowUpNotification(job) }
                 }
                 
-            case let .saveJob(job: job):
+            case let .scheduleNotification(jobApplication):
+                return .run { _ in
+                    try await notificationManager.scheduleFollowUpNotification(jobApplication)
+                }
+                
+            case let .destination(.presented(.jobForm(.delegate(.onSaveButtonTapped(job))))):
+                
                 return .run { [jobApplications = state.activeJobApplications] send in
                     
                     guard jobApplications.firstIndex(where: { $0.id == job.id }) != nil else {
@@ -448,15 +453,6 @@ public struct JobsListLogic: Reducer, Sendable {
                     }
                     await send(.scheduleNotification(job))
                 }
-                
-            case let .scheduleNotification(jobApplication):
-                return .run { _ in
-                    try await notificationManager.scheduleFollowUpNotification(jobApplication)
-                }
-                
-            case let .destination(.presented(.jobForm(.delegate(.onSaveButtonTapped(job))))):
-                
-                return .send(.saveJob(job: job))
                 
             case .binding, .destination, .alert:
                 return .none

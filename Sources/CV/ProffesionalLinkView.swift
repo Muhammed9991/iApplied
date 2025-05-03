@@ -15,6 +15,8 @@ public struct ProfessionalLinkLogic: Reducer, Sendable {
     @ObservableState
     public struct State: Equatable, Sendable {
         var viewMode: Viewmode
+        var id: Int64?
+        var createdAt: Date?
         var titleTextFieldError: TextFieldError?
         var linkFieldError: TextFieldError?
         var title: String = ""
@@ -29,12 +31,13 @@ public struct ProfessionalLinkLogic: Reducer, Sendable {
         case delegate(Delegate)
 
         public enum Delegate: Equatable, Sendable {
-            case onButtonTapped(ProfessionalLink)
+            case onSaveLink(ProfessionalLink)
+            case onEditLink(ProfessionalLink)
         }
     }
 
     @Dependency(\.dismiss) var dismiss
-    @Dependency(\.uuid) var uuid
+    @Dependency(\.date.now) var now
 
     public var body: some Reducer<State, Action> {
         BindingReducer()
@@ -52,18 +55,23 @@ public struct ProfessionalLinkLogic: Reducer, Sendable {
                 }
                 state.titleTextFieldError = nil
                 state.linkFieldError = nil
-                
-                // TODO: handle edit and add here using @Dependency(\.database)
 
-//                let newLink = ProfessionalLink(
-//                    id: uuid(),
-//                    title: state.title,
-//                    url: state.urlString,
-//                    iconName: state.iconName
-//                )
+                let newLink = ProfessionalLink(
+                    id: state.id,
+                    createdAt: state.createdAt ?? now,
+                    title: state.title,
+                    link: state.urlString,
+                    image: state.iconName
+                )
 
-                return .run { send in
-//                    await send(.delegate(.onButtonTapped(newLink)))
+                return .run { [viewMode = state.viewMode] send in
+
+                    switch viewMode {
+                    case .add: await send(.delegate(.onSaveLink(newLink)))
+
+                    case .edit: await send(.delegate(.onEditLink(newLink)))
+                    }
+
                     await dismiss()
                 }
 
