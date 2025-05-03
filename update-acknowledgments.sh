@@ -9,4 +9,4 @@ brew tap FelixHerrmann/tap
 brew install swift-package-list
 
 # Run the command to update the acknowledgments. These will be auto-generated based on our Package.swift file.
-swift-package-list Package.swift --output-type json --requires-license --output-path SupportingFiles
+swift-package-list Package.swift --output-type json --requires-license --output-path Sources/Root
