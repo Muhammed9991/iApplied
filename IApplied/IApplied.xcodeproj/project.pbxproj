@@ -11,7 +11,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		09FF2A452C3694080047D325 /* IApplied.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IApplied.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		09FF2A452C3694080047D325 /* iApplied.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iApplied.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		09FF2A562C36958B0047D325 /* Sample */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Sample; path = ..; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -51,7 +51,7 @@
 		09FF2A462C3694080047D325 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				09FF2A452C3694080047D325 /* IApplied.app */,
+				09FF2A452C3694080047D325 /* iApplied.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -59,9 +59,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		09FF2A442C3694080047D325 /* IApplied */ = {
+		09FF2A442C3694080047D325 /* iApplied */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 09FF2A532C36940A0047D325 /* Build configuration list for PBXNativeTarget "IApplied" */;
+			buildConfigurationList = 09FF2A532C36940A0047D325 /* Build configuration list for PBXNativeTarget "iApplied" */;
 			buildPhases = (
 				09FF2A412C3694080047D325 /* Sources */,
 				09FF2A422C3694080047D325 /* Frameworks */,
@@ -74,12 +74,12 @@
 			fileSystemSynchronizedGroups = (
 				797C34132DB3215D00CB4D49 /* IApplied */,
 			);
-			name = IApplied;
+			name = iApplied;
 			packageProductDependencies = (
 				79AC6EB92DC67F5D004E5169 /* Root */,
 			);
 			productName = SampleProject;
-			productReference = 09FF2A452C3694080047D325 /* IApplied.app */;
+			productReference = 09FF2A452C3694080047D325 /* iApplied.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				09FF2A442C3694080047D325 /* IApplied */,
+				09FF2A442C3694080047D325 /* iApplied */,
 			);
 		};
 /* End PBXProject section */
@@ -280,7 +280,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mahmoodies.iApplied;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = iApplied;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -314,7 +314,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mahmoodies.iApplied;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = iApplied;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -337,7 +337,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		09FF2A532C36940A0047D325 /* Build configuration list for PBXNativeTarget "IApplied" */ = {
+		09FF2A532C36940A0047D325 /* Build configuration list for PBXNativeTarget "iApplied" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				09FF2A542C36940A0047D325 /* Debug */,
