@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "09FF2A442C3694080047D325"
-               BuildableName = "ApplyPal.app"
-               BlueprintName = "ApplyPal"
-               ReferencedContainer = "container:ApplyPal.xcodeproj">
+               BuildableName = "IApplied.app"
+               BlueprintName = "IApplied"
+               ReferencedContainer = "container:IApplied.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "09FF2A442C3694080047D325"
-            BuildableName = "ApplyPal.app"
-            BlueprintName = "ApplyPal"
-            ReferencedContainer = "container:ApplyPal.xcodeproj">
+            BuildableName = "IApplied.app"
+            BlueprintName = "IApplied"
+            ReferencedContainer = "container:IApplied.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -62,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "09FF2A442C3694080047D325"
-            BuildableName = "ApplyPal.app"
-            BlueprintName = "ApplyPal"
-            ReferencedContainer = "container:ApplyPal.xcodeproj">
+            BuildableName = "IApplied.app"
+            BlueprintName = "IApplied"
+            ReferencedContainer = "container:IApplied.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

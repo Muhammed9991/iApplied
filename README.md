@@ -1,8 +1,8 @@
-# ApplyPal
+# iApplied
 
 ## 📱 Job Application Tracker App (iOS 18+)
 
-ApplyPal is a private iOS app designed to help users track job applications and manage CV data efficiently. Built with SwiftUI and The Composable Architecture (TCA), it ensures that the job application process remains organized, timely, and easily accessible, all while keeping user data secure and stored locally with GRDB.
+iApplied is a offline iOS app designed to help users track job applications and manage CV data efficiently. Built with SwiftUI and The Composable Architecture (TCA), it ensures that the job application process remains organized, timely, and easily accessible, all while keeping user data secure and stored locally with GRDB.
 
 ---
 
@@ -92,14 +92,14 @@ ApplyPal is a private iOS app designed to help users track job applications and 
 
 ## 📝 Privacy
 
-ApplyPal stores all data locally on your device using SQLite. No data is sent to external servers, ensuring your job search remains completely private.
+iApplied stores all data locally on your device using SQLite. No data is sent to external servers, ensuring your job search remains completely private.
 
 ---
 
 ## 🛠️ Project Structure
 
 ```
-ApplyPal/
+iApplied/
 ├── Sources/
 │   ├── AppDatabase/        # Database management
 │   ├── CV/                 # CV tab implementation

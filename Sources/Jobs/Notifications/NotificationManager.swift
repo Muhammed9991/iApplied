@@ -41,7 +41,7 @@ struct NotificationManager {
 extension NotificationManager: DependencyKey {
     static var liveValue: Self {
         @Sendable func notificationIdentifier(for jobId: Int64, type: NotificationType) -> String {
-            "com.mahmoodies.applypal.notification.\(type.rawValue).\(jobId)"
+            "com.mahmoodies.iApplied.notification.\(type.rawValue).\(jobId)"
         }
         
         @Sendable func cancelNotifications(for jobId: Int64, type: NotificationType) {

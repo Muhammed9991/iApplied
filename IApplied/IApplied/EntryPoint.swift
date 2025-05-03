@@ -4,7 +4,7 @@ import Root
 import SwiftUI
 
 @main
-struct ApplyPalApp: App {
+struct IAppliedApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
