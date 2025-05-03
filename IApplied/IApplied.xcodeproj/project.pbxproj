@@ -59,9 +59,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		09FF2A442C3694080047D325 /* IApplied */ = {
+		09FF2A442C3694080047D325 /* iApplied */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 09FF2A532C36940A0047D325 /* Build configuration list for PBXNativeTarget "IApplied" */;
+			buildConfigurationList = 09FF2A532C36940A0047D325 /* Build configuration list for PBXNativeTarget "iApplied" */;
 			buildPhases = (
 				09FF2A412C3694080047D325 /* Sources */,
 				09FF2A422C3694080047D325 /* Frameworks */,
@@ -74,7 +74,7 @@
 			fileSystemSynchronizedGroups = (
 				797C34132DB3215D00CB4D49 /* IApplied */,
 			);
-			name = IApplied;
+			name = iApplied;
 			packageProductDependencies = (
 				79AC6EB92DC67F5D004E5169 /* Root */,
 			);
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				09FF2A442C3694080047D325 /* IApplied */,
+				09FF2A442C3694080047D325 /* iApplied */,
 			);
 		};
 /* End PBXProject section */
@@ -337,7 +337,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		09FF2A532C36940A0047D325 /* Build configuration list for PBXNativeTarget "IApplied" */ = {
+		09FF2A532C36940A0047D325 /* Build configuration list for PBXNativeTarget "iApplied" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				09FF2A542C36940A0047D325 /* Debug */,
