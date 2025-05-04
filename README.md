@@ -1,118 +1,82 @@
 # iApplied
 
-## 📱 Job Application Tracker App (iOS 18+)
-
-iApplied is a offline iOS app designed to help users track job applications and manage CV data efficiently. Built with SwiftUI and The Composable Architecture (TCA), it ensures that the job application process remains organized, timely, and easily accessible, all while keeping user data secure and stored locally with GRDB.
+A lightweight iOS app for tracking job applications, managing CV details, and scheduling timely follow-ups — all while keeping your data 100% offline and private.
 
 ---
 
-## 🎯 Current Features
+## 📦 About
 
-### 🔹 Jobs Tab
-
-- **Add Application**
-  - Triggered via a bottom sheet form
-  - Fields:
-    - Job Title (required)
-    - Company Name (required)
-    - Date Applied (default: today)
-    - Application Status (e.g., Applied, Interview, Offer, Declined)
-    - Notes (optional)
-
-- **Job List**
-  - Displayed as cards:
-    - **Full mode**: Shows title, company, days since applied, and a status badge.
-    - **Compact mode**: Displays title, status color, and an icon indicating days since applied.
-  - Toggle between full and compact views.
-
-- **Follow-Up Notifications**
-  - Local notifications are scheduled after a configurable number of days (default: 7 days).
-  - Notifications trigger only for jobs in specific statuses (e.g., "Applied").
-
-- **Job Archiving**
-  - Automatic archiving when the status is set to "Declined."
-  - Manual archiving option available.
-
-- **Delete Job**
-  - Jobs can be deleted from any state.
-
-### 🔹 CV Tab
-
-- **Professional Links Section**
-  - Add links to professional profiles (GitHub, LinkedIn, portfolio, etc.)
-  - Each link includes:
-    - A custom title
-    - A URL
-    - A selectable icon
-    - Copy functionality for quick sharing
+iApplied helps job seekers stay organized throughout the job application process. Track roles you've applied for, manage your CV links and details, and get gentle nudges to follow up — all without sending data to external servers.
 
 ---
 
-## 🚀 Planned Features
+## 🛠️ Technologies
 
-### 🔹 CV Tab Enhancements
-
-- **Manual Entry**
-  - **Experience Section**: Add and manage work history
-  - **Education Section**: Track educational background
-  - **Skills Section**: List technical and soft skills
-  - **About Me**: Personal statement/summary
-
-- **CV File Management**
-  - Upload and save PDF versions of your CV
-  - View, share, and copy functionality
+- **Platform**: iOS 18+
+- **UI**: SwiftUI (native)
+- **Architecture**: [The Composable Architecture (TCA)](https://github.com/pointfreeco/swift-composable-architecture)
+- **Local Storage**: GRDB (SQLite)
+- **Notifications**: UNUserNotificationCenter
 
 ---
 
-## 🖌️ Design & UI
+## 🎯 Features
 
-- **Color Scheme**: Clean and modern with accent colors for different application statuses.
-- **Layout**: Card-based job display and tab-based navigation.
-- **Typography**: Uses the system font (SF Pro) for a native iOS feel.
+### 📋 Jobs
+
+- Add new applications with:
+  - Title
+  - Company
+  - Application status
+  - Date (default: today)
+  - Notes (optional)
+- Toggle between full and compact card views
+- Manual archive or delete options
+- Local notifications to follow up (default: 7 days)
+
+### 📄 CV
+
+- Save professional links (GitHub, LinkedIn, portfolio, etc.)
+- Each link supports:
+  - Custom title
+  - URL
+  - Icon selection
+  - Tap-to-copy for quick sharing
 
 ---
 
-## 🧰 Technical Notes
+## 🧪 Planned Features
 
-- **Target Platform**: iOS 18+
-- **UI Framework**: SwiftUI (fully native, no UIKit)
-- **Architecture**: The Composable Architecture (TCA)
-- **Data Storage**: GRDB (SQLite) with local database
-- **Notifications**: UNUserNotificationCenter for local alerts
+- **Manual CV Entry**
+  - Experience, education, skills, and “About Me” section
+- **CV File Support**
+  - Upload and store PDFs
+  - View, copy, and share resumes
 
 ---
 
-## 🚀 Getting Started
+## 📱 Getting Started
 
-1. Clone the repository.
-2. Open the project in Xcode 16 or later.
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/Muhammed9991/iApplied
+   ```
+2. Open in Xcode 16 or later.
 3. Build and run on an iOS 18+ device or simulator.
 
 ---
 
-## 📝 Privacy
+## 🔒 Privacy First
 
-iApplied stores all data locally on your device using SQLite. No data is sent to external servers, ensuring your job search remains completely private.
-
----
-
-## 🛠️ Project Structure
-
-```
-iApplied/
-├── Sources/
-│   ├── AppDatabase/        # Database management
-│   ├── CV/                 # CV tab implementation
-│   ├── Jobs/               # Jobs tab implementation
-│   │   ├── Notifications/  # Follow-up notification system
-│   │   └── View/           # Job list/card views
-│   ├── Models/             # Data models
-│   ├── Root/               # App root and tab navigation
-│   └── Theme/              # UI theme definitions
-└── Tests/
-    └── JobsTest/           # Unit tests
-```
+All data is stored **locally on your device** using SQLite.  
+No analytics, no trackers, no external storage — your job hunt stays private.
 
 ---
 
-Built with ❤️ for job seekers
+## 🪪 License
+
+iApplied is available under the [GNU General Public License v3.0](LICENSE).
+
+---
+
+Built with ❤️ for job seekers.
