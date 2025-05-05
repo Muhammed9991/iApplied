@@ -37,9 +37,9 @@ let package = Package(
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
             ],
             resources: [
-                .process("package-list.json")
+                .process("package-list.json"),
             ]
-            
+
         ),
 
         .target(name: "Theme"),
@@ -91,6 +91,25 @@ let package = Package(
                 .product(name: "SharingGRDB", package: "sharing-grdb"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
             ]
+        ),
+        .testTarget(
+            name: "AppStoreSnapshotTests",
+            dependencies: [
+                "AppDatabase",
+                "Theme",
+                "Models",
+                "Root",
+                "Jobs",
+                "CV",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+                .product(name: "Dependencies", package: "swift-dependencies"),
+                .product(name: "DependenciesTestSupport", package: "swift-dependencies"),
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                .product(name: "SharingGRDB", package: "sharing-grdb"),
+            ],
+            exclude: [
+                "__Snapshots__",
+            ],
         ),
     ]
 )

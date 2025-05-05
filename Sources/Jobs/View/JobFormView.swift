@@ -6,6 +6,7 @@ import SwiftUI
 import Theme
 
 struct JobFormView: View {
+    @Environment(\.colorScheme) var colorScheme
     @Bindable var store: StoreOf<JobFormLogic>
 
     var body: some View {

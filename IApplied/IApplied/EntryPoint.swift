@@ -2,12 +2,15 @@
 
 import Root
 import SwiftUI
+import IssueReporting
 
 @main
 struct IAppliedApp: App {
     var body: some Scene {
         WindowGroup {
-            RootView()
+            if !isTesting {
+                RootView()
+            }
         }
     }
 }
