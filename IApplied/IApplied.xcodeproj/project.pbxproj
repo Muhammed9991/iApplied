@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		794E5BDD2DC9693300FBED38 /* IssueReporting in Frameworks */ = {isa = PBXBuildFile; productRef = 794E5BDC2DC9693300FBED38 /* IssueReporting */; };
 		79AC6EBA2DC67F5D004E5169 /* Root in Frameworks */ = {isa = PBXBuildFile; productRef = 79AC6EB92DC67F5D004E5169 /* Root */; };
 /* End PBXBuildFile section */
 
@@ -25,6 +26,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				79AC6EBA2DC67F5D004E5169 /* Root in Frameworks */,
+				794E5BDD2DC9693300FBED38 /* IssueReporting in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +79,7 @@
 			name = iApplied;
 			packageProductDependencies = (
 				79AC6EB92DC67F5D004E5169 /* Root */,
+				794E5BDC2DC9693300FBED38 /* IssueReporting */,
 			);
 			productName = SampleProject;
 			productReference = 09FF2A452C3694080047D325 /* iApplied.app */;
@@ -107,6 +110,7 @@
 			);
 			mainGroup = 09FF2A3C2C3694080047D325;
 			packageReferences = (
+				794E5BDB2DC9693300FBED38 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */,
 			);
 			productRefGroup = 09FF2A462C3694080047D325 /* Products */;
 			projectDirPath = "";
@@ -263,11 +267,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"IApplied/Preview Content\"";
 				DEVELOPMENT_TEAM = HRYT9ZBRF7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = iApplied;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -297,11 +303,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"IApplied/Preview Content\"";
 				DEVELOPMENT_TEAM = HRYT9ZBRF7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = iApplied;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -348,7 +356,23 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		794E5BDB2DC9693300FBED38 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/xctest-dynamic-overlay";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		794E5BDC2DC9693300FBED38 /* IssueReporting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 794E5BDB2DC9693300FBED38 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */;
+			productName = IssueReporting;
+		};
 		79AC6EB92DC67F5D004E5169 /* Root */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Root;

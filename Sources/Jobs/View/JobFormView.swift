@@ -6,6 +6,7 @@ import SwiftUI
 import Theme
 
 struct JobFormView: View {
+    @Environment(\.colorScheme) var colorScheme
     @Bindable var store: StoreOf<JobFormLogic>
 
     var body: some View {
@@ -19,38 +20,51 @@ struct JobFormView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         HStack(spacing: 8) {
                             Text("Date Applied")
-                                .font(.headline)
+                                .font(AppTypography.subtitle)
+                                .foregroundColor(AppColors.textPrimary(for: colorScheme))
                             DatePicker("", selection: $store.dateApplied, displayedComponents: .date)
                                 .labelsHidden()
+                                .accentColor(AppColors.accent(for: colorScheme))
                         }
 
                         HStack(spacing: 8) {
                             Text("Status")
-                                .font(.headline)
+                                .font(AppTypography.subtitle)
+                                .foregroundColor(AppColors.textPrimary(for: colorScheme))
                             Picker("", selection: $store.status) {
                                 ForEach(ApplicationStatus.allCases, id: \.self) { status in
                                     Text(status.rawValue.capitalized)
                                 }
                             }
                             .pickerStyle(.menu)
+                            .accentColor(AppColors.accent(for: colorScheme))
                         }
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
                         SectionHeader("Notes")
 
-                        TextEditor(text: $store.notes)
-                            .padding(10)
-                            .frame(minHeight: 150)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1.5)
-                            )
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(AppColors.cardBackground(for: colorScheme))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(AppColors.textSecondary(for: colorScheme).opacity(0.3), lineWidth: 1.5)
+                                )
+                            
+                            TextEditor(text: $store.notes)
+                                .padding(10)
+                                .frame(minHeight: 150)
+                                .foregroundColor(AppColors.textPrimary(for: colorScheme))
+                                .scrollContentBackground(.hidden)
+                                .background(Color.clear)
+                        }
                     }
                 }
                 .padding(.horizontal)
             }
             .scrollDismissesKeyboard(.interactively)
+            .background(AppColors.background(for: colorScheme))
             .navigationTitle(store.jobApplication == nil ? "Add Application" : "Edit Application")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -58,11 +72,13 @@ struct JobFormView: View {
                     Button("Cancel") {
                         store.send(.onCancelButtonTapped)
                     }
+                    .foregroundColor(AppColors.accent(for: colorScheme))
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         store.send(.onSaveButtonTappedValidation)
                     }
+                    .foregroundColor(AppColors.accent(for: colorScheme))
                 }
             }
         }
@@ -74,28 +90,33 @@ private struct ValidatedTextField: View {
     @Binding var text: String
     @Binding var hasError: Bool
     let isRequired: Bool
-
+    @Environment(\.colorScheme) var colorScheme
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(title)
-                    .font(.headline)
+                    .font(AppTypography.subtitle)
+                    .foregroundColor(AppColors.textPrimary(for: colorScheme))
                 if isRequired {
                     Text("*")
                         .foregroundColor(.red)
-                        .font(.headline)
+                        .font(AppTypography.subtitle)
                 }
             }
 
             TextField("", text: $text)
                 .padding()
+                .foregroundColor(AppColors.textPrimary(for: colorScheme))
                 .background(RoundedRectangle(cornerRadius: 8)
-                    .stroke(hasError && text.isEmpty ? Color.red : Color.gray.opacity(0.3), lineWidth: 1.5))
+                    .fill(AppColors.cardBackground(for: colorScheme)))
+                .overlay(RoundedRectangle(cornerRadius: 8)
+                    .stroke(hasError && text.isEmpty ? Color.red : AppColors.textSecondary(for: colorScheme).opacity(0.3), lineWidth: 1.5))
 
             if hasError, text.isEmpty {
                 Text("This field is required")
                     .foregroundColor(.red)
-                    .font(.caption)
+                    .font(AppTypography.caption)
             }
         }
     }
@@ -103,6 +124,7 @@ private struct ValidatedTextField: View {
 
 private struct SectionHeader: View {
     let title: String
+    @Environment(\.colorScheme) var colorScheme
 
     init(_ title: String) {
         self.title = title
@@ -110,22 +132,33 @@ private struct SectionHeader: View {
 
     var body: some View {
         Text(title.uppercased())
-            .font(.caption)
+            .font(AppTypography.caption)
             .fontWeight(.semibold)
-            .foregroundColor(.gray)
+            .foregroundColor(AppColors.textSecondary(for: colorScheme))
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
 // MARK: - Preview
 
-#Preview {
+#Preview("Light Mode") {
     JobFormView(
         store: Store(
             initialState: JobFormLogic.State(jobApplication: nil),
             reducer: { JobFormLogic() }
         )
     )
+    .preferredColorScheme(.light)
+}
+
+#Preview("Dark Mode") {
+    JobFormView(
+        store: Store(
+            initialState: JobFormLogic.State(jobApplication: nil),
+            reducer: { JobFormLogic() }
+        )
+    )
+    .preferredColorScheme(.dark)
 }
 
 // MARK: - Reducer
