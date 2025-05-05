@@ -98,7 +98,6 @@ let package = Package(
                 "AppDatabase",
                 "Theme",
                 "Models",
-                "Root",
                 "Jobs",
                 "CV",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),

@@ -1,19 +1,13 @@
 import AppDatabase
 import ComposableArchitecture
 @testable import CV
-import Dependencies
 import DependenciesTestSupport
 @testable import Jobs
 import Models
-import Root
-import SharingGRDB
-import SharingGRDBCore
-import SnapshotTesting
 import StructuredQueries
 import SwiftUI
 import Testing
 import Theme
-import UIKit
 
 @MainActor
 @Suite(.dependency(\.defaultDatabase, try testDatabase()))
@@ -37,7 +31,7 @@ struct AppStoreSnapshotTests {
         assertAppStoreDevicePreviewSnapshots(
             for: JobsListView(store: store),
             description: {
-                Text("Easily view your active job applications").foregroundColor(Color.black.opacity(0.6))
+                Text("Track every job application in one place").foregroundColor(Color.black.opacity(0.6))
             },
             backgroundColor: AppColors.accent(for: .light),
             colorScheme: .light
@@ -61,9 +55,8 @@ struct AppStoreSnapshotTests {
         assertAppStoreDevicePreviewSnapshots(
             for: JobsListView(store: store),
             description: {
-                Text("Easily view your active job applications").foregroundColor(Color.white)
-                    + Text("\n(With Dark Mode)")
-
+                Text("Track every job application in one place").foregroundColor(Color.white)
+                    + Text("\nFully supports light and dark themes").foregroundColor(Color.white.opacity(0.8))
             },
             backgroundColor: AppColors.accent(for: .dark),
             colorScheme: .dark
@@ -72,7 +65,7 @@ struct AppStoreSnapshotTests {
     
     // MARK: - Add Job
     
-    // TODO: the background for JobForm needs to be modified
+    @Test
     func addJob_light_mode() async throws {
         let store = Store(
             initialState: JobFormLogic.State(
@@ -90,14 +83,14 @@ struct AppStoreSnapshotTests {
         assertDeviceBottomSheetSnapshots(
             for: JobFormView(store: store),
             description: {
-                Text("Easily add a job").foregroundColor(Color.black.opacity(0.6))
+                Text("Log applications with all important details").foregroundColor(Color.black.opacity(0.6))
             },
             backgroundColor: AppColors.accent(for: .light),
             colorScheme: .light
         )
     }
     
-    // TODO: the background for JobForm needs to be modified
+    @Test
     func addJob_dark_mode() async throws {
         let store = Store(
             initialState: JobFormLogic.State(
@@ -115,8 +108,8 @@ struct AppStoreSnapshotTests {
         assertDeviceBottomSheetSnapshots(
             for: JobFormView(store: store),
             description: {
-                Text("Easily add a job").foregroundColor(Color.white)
-                    + Text("\n(With Dark Mode)")
+                Text("Log applications with all important details").foregroundColor(Color.white)
+                    + Text("\nEasy on the eyes with dark mode support").foregroundColor(Color.white.opacity(0.8))
             },
             backgroundColor: AppColors.accent(for: .dark),
             colorScheme: .dark
@@ -137,7 +130,7 @@ struct AppStoreSnapshotTests {
         assertAppStoreDevicePreviewSnapshots(
             for: CVTabView(store: store),
             description: {
-                Text("Save your professional links").foregroundColor(Color.black.opacity(0.6)) + Text("\nCopy with one tap").foregroundColor(Color.black.opacity(0.6))
+                Text("Keep your professional profile links organised").foregroundColor(Color.black.opacity(0.6)) + Text("\nOne-tap copying for quick sharing").foregroundColor(Color.black.opacity(0.6))
             },
             backgroundColor: AppColors.accent(for: .light),
             colorScheme: .light
@@ -156,9 +149,9 @@ struct AppStoreSnapshotTests {
         assertAppStoreDevicePreviewSnapshots(
             for: CVTabView(store: store),
             description: {
-                Text("Save your professional links").foregroundColor(Color.white)
-                    + Text("\nCopy with one tap").foregroundColor(Color.white)
-                    + Text("\n(With Dark Mode)")
+                Text("Keep your professional profile links organised").foregroundColor(Color.white)
+                    + Text("\nOne-tap copying for quick sharing").foregroundColor(Color.white)
+                    + Text("\nAdapts to your preferred theme").foregroundColor(Color.white.opacity(0.8))
             },
             backgroundColor: AppColors.accent(for: .dark),
             colorScheme: .dark

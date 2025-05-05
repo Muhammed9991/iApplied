@@ -55,7 +55,7 @@ public struct RootView: View {
 }
 
 #Preview {
-    _ = prepareDependencies {
+    prepareDependencies {
         $0.defaultDatabase = try! appDatabase()
     }
     return RootView(store: .init(
@@ -112,7 +112,6 @@ public struct RootLogic: Reducer {
                 guard !state.isAuthorisedForNotifications else {
                     return .none
                 }
-                return .none
                 return .run { send in
 
                     // TODO: this should be moved to a dependency
@@ -152,7 +151,6 @@ public struct RootLogic: Reducer {
                 return .none
             }
         }
-        ._printChanges()
     }
 }
 

@@ -7,9 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		794E5BD62DC8DC6300FBED38 /* IssueReporting in Frameworks */ = {isa = PBXBuildFile; productRef = 794E5BD52DC8DC6300FBED38 /* IssueReporting */; };
-		794E5BD82DC8DC6300FBED38 /* IssueReportingTestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = 794E5BD72DC8DC6300FBED38 /* IssueReportingTestSupport */; };
-		794E5BDA2DC8DC6300FBED38 /* XCTestDynamicOverlay in Frameworks */ = {isa = PBXBuildFile; productRef = 794E5BD92DC8DC6300FBED38 /* XCTestDynamicOverlay */; };
+		794E5BDD2DC9693300FBED38 /* IssueReporting in Frameworks */ = {isa = PBXBuildFile; productRef = 794E5BDC2DC9693300FBED38 /* IssueReporting */; };
 		79AC6EBA2DC67F5D004E5169 /* Root in Frameworks */ = {isa = PBXBuildFile; productRef = 79AC6EB92DC67F5D004E5169 /* Root */; };
 /* End PBXBuildFile section */
 
@@ -28,9 +26,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				79AC6EBA2DC67F5D004E5169 /* Root in Frameworks */,
-				794E5BD82DC8DC6300FBED38 /* IssueReportingTestSupport in Frameworks */,
-				794E5BDA2DC8DC6300FBED38 /* XCTestDynamicOverlay in Frameworks */,
-				794E5BD62DC8DC6300FBED38 /* IssueReporting in Frameworks */,
+				794E5BDD2DC9693300FBED38 /* IssueReporting in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,9 +79,7 @@
 			name = iApplied;
 			packageProductDependencies = (
 				79AC6EB92DC67F5D004E5169 /* Root */,
-				794E5BD52DC8DC6300FBED38 /* IssueReporting */,
-				794E5BD72DC8DC6300FBED38 /* IssueReportingTestSupport */,
-				794E5BD92DC8DC6300FBED38 /* XCTestDynamicOverlay */,
+				794E5BDC2DC9693300FBED38 /* IssueReporting */,
 			);
 			productName = SampleProject;
 			productReference = 09FF2A452C3694080047D325 /* iApplied.app */;
@@ -116,7 +110,7 @@
 			);
 			mainGroup = 09FF2A3C2C3694080047D325;
 			packageReferences = (
-				794E5BD42DC8DC6300FBED38 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */,
+				794E5BDB2DC9693300FBED38 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */,
 			);
 			productRefGroup = 09FF2A462C3694080047D325 /* Products */;
 			projectDirPath = "";
@@ -363,31 +357,21 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		794E5BD42DC8DC6300FBED38 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */ = {
+		794E5BDB2DC9693300FBED38 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pointfreeco/xctest-dynamic-overlay";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.2.2;
+				minimumVersion = 1.5.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		794E5BD52DC8DC6300FBED38 /* IssueReporting */ = {
+		794E5BDC2DC9693300FBED38 /* IssueReporting */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 794E5BD42DC8DC6300FBED38 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */;
+			package = 794E5BDB2DC9693300FBED38 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */;
 			productName = IssueReporting;
-		};
-		794E5BD72DC8DC6300FBED38 /* IssueReportingTestSupport */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 794E5BD42DC8DC6300FBED38 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */;
-			productName = IssueReportingTestSupport;
-		};
-		794E5BD92DC8DC6300FBED38 /* XCTestDynamicOverlay */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 794E5BD42DC8DC6300FBED38 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */;
-			productName = XCTestDynamicOverlay;
 		};
 		79AC6EB92DC67F5D004E5169 /* Root */ = {
 			isa = XCSwiftPackageProductDependency;
