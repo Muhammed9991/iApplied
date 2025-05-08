@@ -95,8 +95,8 @@ extension NotificationManager: DependencyKey {
             let notificationId = notificationIdentifier(for: jobApplication.id!, type: .followUp)
             let daysAfterDate = 7 // <--- This should come from settings in future
             let config = NotificationConfig(
-                title: "Follow up: \(jobApplication.title) at \(jobApplication.company)",
-                body: "It's been \(daysAfterDate) days since you applied. Consider following up!",
+                title: "Time to follow up!",
+                body: "It's been \(daysAfterDate) days since you applied at \(jobApplication.company).",
                 daysAfterDate: daysAfterDate,
                 baseDate: jobApplication.dateApplied,
                 identifier: notificationId
