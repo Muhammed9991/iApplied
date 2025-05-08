@@ -93,7 +93,7 @@ public struct JobsListLogic: Reducer, Sendable {
                 
             case .toggleViewMode:
                 state.viewMode = state.viewMode == .full ? .compact : .full
-                state.$isCompact.withLock{ $0 = state.viewMode == .compact  }
+                state.$isCompact.withLock { $0 = state.viewMode == .compact }
                 return .none
                 
             case let .onEditButtonTapped(jobApplication):
@@ -140,6 +140,10 @@ public struct JobsListLogic: Reducer, Sendable {
                         var updatedJob = job
                         updatedJob.isArchived = true
                         try JobApplication.update(updatedJob).execute(db)
+                    }
+                    
+                    if let id = job.id {
+                        notificationManager.cancelNotification("\(id)")
                     }
                 }
                 
