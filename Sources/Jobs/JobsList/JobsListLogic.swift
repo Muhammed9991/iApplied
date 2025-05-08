@@ -2,6 +2,10 @@ import ComposableArchitecture
 import Models
 import SharingGRDB
 
+extension SharedReaderKey where Self == AppStorageKey<Bool> {
+    static var isCompact: Self { .appStorage("isCompact") }
+}
+
 @Reducer
 public struct JobsListLogic: Reducer, Sendable {
     public init() {}
@@ -32,12 +36,12 @@ public struct JobsListLogic: Reducer, Sendable {
         var archivedJobApplications
         
         var selectedTab: Tab = .active
-        var isCompact: Bool = true
+        @Shared(.isCompact) var isCompact: Bool = false
         var jobApplication: JobApplication?
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<Action.Alert>?
         
-        var viewMode: ViewMode = .compact
+        var viewMode: ViewMode = .full
         public enum ViewMode: Equatable, Sendable {
             case full
             case compact
@@ -89,7 +93,7 @@ public struct JobsListLogic: Reducer, Sendable {
                 
             case .toggleViewMode:
                 state.viewMode = state.viewMode == .full ? .compact : .full
-                state.isCompact = state.viewMode == .compact
+                state.$isCompact.withLock{ $0 = state.viewMode == .compact  }
                 return .none
                 
             case let .onEditButtonTapped(jobApplication):
@@ -196,14 +200,12 @@ public struct JobsListLogic: Reducer, Sendable {
 
 public extension JobsListLogic.State {
     init(
-        isCompact: Bool = true,
         jobApplication: JobApplication? = nil,
         destination: JobsListLogic.Destination.State? = nil,
         alert: AlertState<JobsListLogic.Action.Alert>? = nil,
         viewMode: ViewMode = .compact,
         selectedTab: Tab = .active
     ) {
-        self.isCompact = isCompact
         self.jobApplication = jobApplication
         self.destination = destination
         self.alert = alert

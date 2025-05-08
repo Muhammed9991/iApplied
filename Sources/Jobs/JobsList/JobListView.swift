@@ -193,11 +193,17 @@ public struct JobsListView: View {
     }
     
     private var leadingToolbarItems: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarLeading) {
-            Button {
-                store.send(.toggleViewMode, animation: jobAnimation)
-            } label: {
-                Image(systemName: store.viewMode == .full ? "list.bullet" : "rectangle.grid.1x2")
+        Group {
+            if (store.selectedTab == .active && !store.activeJobApplications.isEmpty) ||
+                (store.selectedTab == .archived && !store.archivedJobApplications.isEmpty)
+            {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        store.send(.toggleViewMode, animation: jobAnimation)
+                    } label: {
+                        Image(systemName: store.viewMode == .full ? "list.bullet" : "rectangle.grid.1x2")
+                    }
+                }
             }
         }
     }
