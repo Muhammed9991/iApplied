@@ -71,7 +71,6 @@ public struct JobsListLogic: Reducer, Sendable {
         BindingReducer()
         Reduce<State, Action> { state, action in
             switch action {
-                
             case .alert(.presented(.confirmDeleteJob)):
                 state.alert = nil
                 return .run { [jobApplication = state.jobApplication] _ in
@@ -117,8 +116,12 @@ public struct JobsListLogic: Reducer, Sendable {
                         try JobApplication.update(updatedJob).execute(db)
                     }
                     
-                    if let id = job.id, status == .declined {
-                        notificationManager.cancelNotification("\(id)")
+                    if let id = job.id {
+                        if status == .applied {
+                            try await notificationManager.scheduleFollowUpNotification(job)
+                        } else {
+                            notificationManager.cancelNotification("\(id)")
+                        }
                     }
                 }
                 
@@ -144,7 +147,9 @@ public struct JobsListLogic: Reducer, Sendable {
                         try JobApplication.update(updatedJob).execute(db)
                     }
                     
-                    if job.status == ApplicationStatus.applied.rawValue { try await notificationManager.scheduleFollowUpNotification(job) }
+                    if job.status == ApplicationStatus.applied.rawValue {
+                        try await notificationManager.scheduleFollowUpNotification(job)
+                    }
                 }
                 
             case let .destination(.presented(.jobForm(.delegate(.onSaveButtonTapped(job))))):
