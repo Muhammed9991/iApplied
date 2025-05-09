@@ -1,9 +1,10 @@
 //  Created by Muhammed Mahmood on 19/04/2025.
 
+import StructuredQueries
 import SwiftUI
 import Theme
 
-public enum ApplicationStatus: String, CaseIterable, Codable, Sendable, Equatable {
+public enum ApplicationStatus: String, CaseIterable, Codable, Sendable, Equatable, QueryBindable {
     case applied = "Applied"
     case interview = "Interview"
     case offer = "Offer"

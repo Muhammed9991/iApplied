@@ -51,13 +51,11 @@ struct JobFormView: View {
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(AppColors.textSecondary(for: colorScheme).opacity(0.3), lineWidth: 1.5)
                                 )
-                            
-                            TextEditor(text: $store.notes)
-                                .padding(10)
-                                .frame(minHeight: 150)
+
+                            AutoSizingTextEditor(text: $store.notes, height: $store.dynamicHeight)
+                                .frame(height: store.dynamicHeight)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .foregroundColor(AppColors.textPrimary(for: colorScheme))
-                                .scrollContentBackground(.hidden)
-                                .background(Color.clear)
                         }
                     }
                 }
@@ -91,7 +89,7 @@ private struct ValidatedTextField: View {
     @Binding var hasError: Bool
     let isRequired: Bool
     @Environment(\.colorScheme) var colorScheme
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -177,6 +175,7 @@ public struct JobFormLogic: Reducer, Sendable {
         var titleHasError: Bool = false
         var companyHasError: Bool = false
         var showValidationErrors: Bool = false
+        var dynamicHeight: CGFloat = 100
     }
 
     public enum Action: Equatable, Sendable, BindableAction {
@@ -215,7 +214,7 @@ public struct JobFormLogic: Reducer, Sendable {
                     company: state.company,
                     createdAt: state.jobApplication?.createdAt ?? now,
                     dateApplied: state.dateApplied,
-                    status: state.status.rawValue,
+                    status: state.status,
                     notes: state.notes.isEmpty ? nil : state.notes,
                     lastFollowUpDate: state.jobApplication?.lastFollowUpDate
                 )
@@ -241,7 +240,7 @@ extension JobFormLogic.State {
         self.title = jobApplication?.title ?? ""
         self.company = jobApplication?.company ?? ""
         self.dateApplied = jobApplication?.dateApplied ?? Date()
-        self.status = ApplicationStatus.toApplicationStatus(from: jobApplication?.status ?? ApplicationStatus.applied.rawValue)
+        self.status = jobApplication?.status ?? ApplicationStatus.applied
         self.notes = jobApplication?.notes ?? ""
     }
 }
