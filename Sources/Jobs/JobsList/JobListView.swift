@@ -199,9 +199,9 @@ public struct JobsListView: View {
             {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
-                        store.send(.toggleViewMode, animation: jobAnimation)
+                        store.isCompact.toggle()
                     } label: {
-                        Image(systemName: store.viewMode == .full ? "list.bullet" : "rectangle.grid.1x2")
+                        Image(systemName: store.isCompact ? "rectangle.grid.1x2" : "list.bullet")
                     }
                 }
             }

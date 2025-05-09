@@ -40,12 +40,6 @@ public struct JobsListLogic: Reducer, Sendable {
         var jobApplication: JobApplication?
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<Action.Alert>?
-        
-        var viewMode: ViewMode = .full
-        public enum ViewMode: Equatable, Sendable {
-            case full
-            case compact
-        }
 
         public enum Tab: Equatable, Sendable {
             case active
@@ -56,7 +50,6 @@ public struct JobsListLogic: Reducer, Sendable {
     public enum Action: Equatable, Sendable, BindableAction {
         case binding(BindingAction<State>)
         case destination(PresentationAction<Destination.Action>)
-        case toggleViewMode
         case onEditButtonTapped(JobApplication)
         case onAddApplicationTapped
         case onDeleteButtonTapped(JobApplication)
@@ -78,6 +71,7 @@ public struct JobsListLogic: Reducer, Sendable {
         BindingReducer()
         Reduce<State, Action> { state, action in
             switch action {
+                
             case .alert(.presented(.confirmDeleteJob)):
                 state.alert = nil
                 return .run { [jobApplication = state.jobApplication] _ in
@@ -90,11 +84,6 @@ public struct JobsListLogic: Reducer, Sendable {
                         notificationManager.cancelNotification("\(id)")
                     }
                 }
-                
-            case .toggleViewMode:
-                state.viewMode = state.viewMode == .full ? .compact : .full
-                state.$isCompact.withLock { $0 = state.viewMode == .compact }
-                return .none
                 
             case let .onEditButtonTapped(jobApplication):
                 state.jobApplication = jobApplication
@@ -207,13 +196,11 @@ public extension JobsListLogic.State {
         jobApplication: JobApplication? = nil,
         destination: JobsListLogic.Destination.State? = nil,
         alert: AlertState<JobsListLogic.Action.Alert>? = nil,
-        viewMode: ViewMode = .compact,
         selectedTab: Tab = .active
     ) {
         self.jobApplication = jobApplication
         self.destination = destination
         self.alert = alert
-        self.viewMode = viewMode
         self.selectedTab = selectedTab
     }
 }
