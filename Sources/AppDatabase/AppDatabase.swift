@@ -54,16 +54,6 @@ public func appDatabase() throws -> any DatabaseWriter {
         }
     #endif
 
-    migrator.registerMigration("Update isArchived flag based on legacy Archived status") { db in
-        try JobApplication
-            .update { $0.isArchived = $0.status == "Archived" }
-            .execute(db)
-        try JobApplication
-            .where { $0.status == "Archived" }
-            .update { $0.status = "Declined" } // Assumption if previously archived they were declined. Only affects legacy applications
-            .execute(db)
-    }
-
     migrator.registerMigration("Add professionalLink table") { db in
         try db.create(table: ProfessionalLink.tableName) { table in
             table.autoIncrementedPrimaryKey("id")
@@ -95,12 +85,12 @@ public func appDatabase() throws -> any DatabaseWriter {
             let currentDate = Date()
             let calendar = Calendar.current
 
-            let applications: [(Date, String, String, String)] = [
-                (calendar.date(byAdding: .minute, value: 1, to: currentDate)!, "iOS Developer", "Apple Inc.", "Applied"),
-                (calendar.date(byAdding: .day, value: -10, to: currentDate)!, "Senior Swift Developer", "Microsoft", "Interview"),
-                (calendar.date(byAdding: .day, value: -7, to: currentDate)!, "Mobile Engineer", "Google", "Offer"),
-                (calendar.date(byAdding: .day, value: -3, to: currentDate)!, "Software Engineer", "Meta", "Declined"),
-                (currentDate, "Swift Developer", "Amazon", "Declined")
+            let applications: [(Date, String, String, ApplicationStatus)] = [
+                (calendar.date(byAdding: .minute, value: 1, to: currentDate)!, "iOS Developer", "Apple Inc.", .applied),
+                (calendar.date(byAdding: .day, value: -10, to: currentDate)!, "Senior Swift Developer", "Microsoft", .interview),
+                (calendar.date(byAdding: .day, value: -7, to: currentDate)!, "Mobile Engineer", "Google", .offer),
+                (calendar.date(byAdding: .day, value: -3, to: currentDate)!, "Software Engineer", "Meta", .declined),
+                (currentDate, "Swift Developer", "Amazon", .declined)
             ]
 
             for (dateApplied, title, company, status) in applications {

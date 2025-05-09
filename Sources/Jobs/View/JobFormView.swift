@@ -214,7 +214,7 @@ public struct JobFormLogic: Reducer, Sendable {
                     company: state.company,
                     createdAt: state.jobApplication?.createdAt ?? now,
                     dateApplied: state.dateApplied,
-                    status: state.status.rawValue,
+                    status: state.status,
                     notes: state.notes.isEmpty ? nil : state.notes,
                     lastFollowUpDate: state.jobApplication?.lastFollowUpDate
                 )
@@ -240,7 +240,7 @@ extension JobFormLogic.State {
         self.title = jobApplication?.title ?? ""
         self.company = jobApplication?.company ?? ""
         self.dateApplied = jobApplication?.dateApplied ?? Date()
-        self.status = ApplicationStatus.toApplicationStatus(from: jobApplication?.status ?? ApplicationStatus.applied.rawValue)
+        self.status = jobApplication?.status ?? ApplicationStatus.applied
         self.notes = jobApplication?.notes ?? ""
     }
 }

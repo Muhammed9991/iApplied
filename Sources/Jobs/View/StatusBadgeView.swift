@@ -4,17 +4,16 @@ import Models
 import SwiftUI
 
 struct StatusBadgeView: View {
-    let status: String
-    var applicationStatus: ApplicationStatus { ApplicationStatus.toApplicationStatus(from: status) }
+    let status: ApplicationStatus
 
     var body: some View {
-        Text(applicationStatus.rawValue)
+        Text(status.rawValue)
             .font(.caption)
             .fontWeight(.medium)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(applicationStatus.color.opacity(0.2))
-            .foregroundColor(applicationStatus.color)
+            .background(status.color.opacity(0.2))
+            .foregroundColor(status.color)
             .cornerRadius(8)
     }
 }

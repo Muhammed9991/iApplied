@@ -112,7 +112,7 @@ public struct JobsListLogic: Reducer, Sendable {
                     
                     try await database.write { db in
                         var updatedJob = job
-                        updatedJob.status = status.rawValue
+                        updatedJob.status = status
                         try JobApplication.update(updatedJob).execute(db)
                     }
                     
@@ -147,7 +147,7 @@ public struct JobsListLogic: Reducer, Sendable {
                         try JobApplication.update(updatedJob).execute(db)
                     }
                     
-                    if job.status == ApplicationStatus.applied.rawValue {
+                    if job.status == ApplicationStatus.applied {
                         try await notificationManager.scheduleFollowUpNotification(job)
                     }
                 }

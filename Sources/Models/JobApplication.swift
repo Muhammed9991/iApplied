@@ -11,7 +11,7 @@ public struct JobApplication: Identifiable, Sendable, Equatable {
     public var company: String
     @Column(as: Date.ISO8601Representation.self) public var createdAt: Date
     @Column(as: Date.ISO8601Representation.self) public var dateApplied: Date
-    public var status: String
+    public var status: ApplicationStatus
     public var notes: String?
     @Column(as: Date.ISO8601Representation?.self) public var lastFollowUpDate: Date?
     public var isArchived: Bool = false
@@ -22,7 +22,7 @@ public struct JobApplication: Identifiable, Sendable, Equatable {
         company: String,
         createdAt: Date,
         dateApplied: Date,
-        status: String,
+        status: ApplicationStatus,
         notes: String? = nil,
         lastFollowUpDate: Date? = nil,
         isArchived: Bool = false
@@ -48,7 +48,7 @@ public extension JobApplication {
             company: "Tech Corp",
             createdAt: Date(),
             dateApplied: Date().addingTimeInterval(-7*24*60*60), // 7 days ago
-            status: ApplicationStatus.applied.rawValue,
+            status: ApplicationStatus.applied,
             notes: "Applied through company website. Contact: john@techcorp.com"
         )
     }
