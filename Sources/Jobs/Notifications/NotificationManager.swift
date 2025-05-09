@@ -3,8 +3,8 @@
 import Dependencies
 import Foundation
 import Models
-import UserNotifications
 import OSLog
+import UserNotifications
 
 enum NotificationType: String {
     case followUp
@@ -88,12 +88,20 @@ extension NotificationManager: DependencyKey {
             
         } scheduleFollowUpNotification: { jobApplication in
             precondition(jobApplication.id != nil, "Bruh how would this even be possible?")
-            
+
             // Cancel any existing follow-up notifications for this job
             cancelNotifications(for: jobApplication.id!, type: .followUp)
-            
+
             let notificationId = notificationIdentifier(for: jobApplication.id!, type: .followUp)
-            let daysAfterDate = 7 // <--- This should come from settings in future
+            let daysAfterDate = 7 // TODO: Move this to settings in the future
+
+            // Check if the notification would be scheduled in the past
+            let followUpDate = Calendar.current.date(byAdding: .day, value: daysAfterDate, to: jobApplication.dateApplied)!
+            if followUpDate < Date() {
+                Logger.jobs.debug("Skipping follow-up notification for job \(jobApplication.id!) — follow-up date is in the past.")
+                return
+            }
+
             let config = NotificationConfig(
                 title: "Time to follow up!",
                 body: "It's been \(daysAfterDate) days since you applied at \(jobApplication.company).",
@@ -101,7 +109,7 @@ extension NotificationManager: DependencyKey {
                 baseDate: jobApplication.dateApplied,
                 identifier: notificationId
             )
-            
+
             try await scheduleNotification(config: config)
         }
     }
