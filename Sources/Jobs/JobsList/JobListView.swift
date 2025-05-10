@@ -142,7 +142,7 @@ public struct JobsListView: View {
     }
     
     private var activeJobsSection: some View {
-        ForEach(store.activeJobApplications) { job in
+        ForEach(store.filteredActiveJobs) { job in
             jobCardView(for: job)
         }
     }

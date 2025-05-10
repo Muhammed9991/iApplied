@@ -84,13 +84,69 @@ public struct JobsListLogic: Reducer, Sendable {
             """, as: JobApplicationStatusCounts?.self)
         )
         var jobApplicationStatusCounts: JobApplicationStatusCounts?
-
+        
         var selectedTab: Tab = .active
         @Shared(.isCompact) var isCompact: Bool = false
         var jobApplication: JobApplication?
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<Action.Alert>?
-        var activeFilter: FilterType? = .all
+        var activeFilter: FilterType = .all
+        
+        @ObservationStateIgnored
+        @FetchAll(
+            JobApplication
+                .all
+                .where { !$0.isArchived && $0.status == ApplicationStatus.applied }
+                .order { $0.dateApplied.desc() }
+        )
+        var filteredAppliedJobs: [JobApplication]
+
+        @ObservationStateIgnored
+        @FetchAll(
+            JobApplication
+                .all
+                .where { !$0.isArchived && $0.status == ApplicationStatus.interview }
+                .order { $0.dateApplied.desc() }
+        )
+        var filteredInterviewJobs: [JobApplication]
+
+        @ObservationStateIgnored
+        @FetchAll(
+            JobApplication
+                .all
+                .where { !$0.isArchived && $0.status == ApplicationStatus.offer }
+                .order { $0.dateApplied.desc() }
+        )
+        var filteredOfferJobs: [JobApplication]
+
+        @ObservationStateIgnored
+        @FetchAll(
+            JobApplication
+                .all
+                .where { !$0.isArchived && $0.status == ApplicationStatus.declined }
+                .order { $0.dateApplied.desc() }
+        )
+        var filteredDeclinedJobs: [JobApplication]
+
+        @ObservationStateIgnored
+        @FetchAll(
+            JobApplication
+                .all
+                .where { !$0.isArchived }
+                .order { $0.dateApplied.desc() }
+        )
+        var filteredAllJobs: [JobApplication]
+
+        
+        var filteredActiveJobs: [JobApplication] {
+            switch activeFilter {
+            case .all: activeJobApplications
+            case .applied: filteredAppliedJobs
+            case .declined: filteredDeclinedJobs
+            case .interview: filteredInterviewJobs
+            case .offer: filteredOfferJobs
+            }
+        }
 
         public enum Tab: Equatable, Sendable {
             case active
