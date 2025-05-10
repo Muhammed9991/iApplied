@@ -60,26 +60,25 @@ public struct JobsListView: View {
     private var tabSelectionView: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .bottom) {
-                HStack(spacing: 0) {
-                    tabButton(for: .active)
-                    tabButton(for: .archived)
+                VStack(spacing: 8) {
+                    HStack(spacing: 0) {
+                        tabButton(for: .active)
+                        tabButton(for: .archived)
+                    }
+                    
+                    // Animated sliding underline
+                    GeometryReader { geometry in
+                        Rectangle()
+                            .fill(AppColors.accent(for: colorScheme))
+                            .frame(width: geometry.size.width / 2, height: 3)
+                            .cornerRadius(1.5)
+                            .offset(x: store.selectedTab == .active ? 0 : geometry.size.width / 2)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: store.selectedTab)
+                    }
+                    .frame(height: 3)
                 }
-                
-                // Animated sliding underline
-                GeometryReader { geometry in
-                    Rectangle()
-                        .fill(AppColors.accent(for: colorScheme))
-                        .frame(width: geometry.size.width / 2, height: 3)
-                        .cornerRadius(1.5)
-                        .offset(x: store.selectedTab == .active ? 0 : geometry.size.width / 2)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: store.selectedTab)
-                }
-                .frame(height: 3)
-                .padding(.bottom, 0)
             }
             .padding(.horizontal)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
             
             Divider()
                 .background(AppColors.textSecondary(for: colorScheme).opacity(0.3))
