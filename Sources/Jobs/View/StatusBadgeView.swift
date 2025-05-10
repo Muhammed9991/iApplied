@@ -7,9 +7,9 @@ import Theme
 struct StatusBadgeView: View {
     let status: ApplicationStatus
     var count: Int?
+    var isActive: Bool = false
     var onToggle: ((Bool) -> Void)? = nil
 
-    @State private var isActive: Bool = false
     @Environment(\.colorScheme) private var colorScheme
 
     private var backgroundColor: Color {
@@ -47,8 +47,7 @@ struct StatusBadgeView: View {
         )
         .onTapGesture {
             if let onToggle {
-                isActive.toggle()
-                onToggle(isActive)
+                onToggle(!isActive)
             }
         }
     }
@@ -76,18 +75,15 @@ struct StatusBadgeView: View {
 
         Text("Active State Examples")
         VStack(spacing: 10) {
-            let activeStatus = StatusBadgeView(status: .applied, count: 5) { _ in }
-            let inactiveStatus = StatusBadgeView(status: .applied, count: 5) { _ in }
-
             HStack {
-                activeStatus
-                inactiveStatus
+                StatusBadgeView(status: .applied, count: 5, isActive: true) { _ in }
+                StatusBadgeView(status: .applied, count: 5, isActive: false) { _ in }
             }
             .preferredColorScheme(.light)
 
             HStack {
-                activeStatus
-                inactiveStatus
+                StatusBadgeView(status: .applied, count: 5, isActive: true) { _ in }
+                StatusBadgeView(status: .applied, count: 5, isActive: false) { _ in }
             }
             .preferredColorScheme(.dark)
         }

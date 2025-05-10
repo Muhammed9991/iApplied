@@ -6,6 +6,14 @@ extension SharedReaderKey where Self == AppStorageKey<Bool> {
     static var isCompact: Self { .appStorage("isCompact") }
 }
 
+enum FilterType: String, CaseIterable, Hashable, Equatable, Sendable {
+    case all = "All"
+    case applied = "Applied"
+    case interview = "Interview"
+    case offer = "Offer"
+    case declined = "Declined"
+}
+
 @Reducer
 public struct JobsListLogic: Reducer, Sendable {
     public init() {}
@@ -59,6 +67,7 @@ public struct JobsListLogic: Reducer, Sendable {
         var jobApplication: JobApplication?
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<Action.Alert>?
+        var activeFilter: FilterType? = .all
 
         public enum Tab: Equatable, Sendable {
             case active

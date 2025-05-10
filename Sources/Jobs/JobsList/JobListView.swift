@@ -31,6 +31,11 @@ public struct JobsListView: View {
                     tabSelectionView
                         .padding(.bottom, 8)
                     
+                    // Status filter badges
+                    filterBadgesView
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
+                    
                     if (store.selectedTab == .active && store.activeJobApplications.isEmpty) ||
                         (store.selectedTab == .archived && store.archivedJobApplications.isEmpty)
                     {
@@ -274,6 +279,47 @@ public struct JobsListView: View {
                 .cornerRadius(10)
         }
         .padding(.top, 10)
+    }
+    
+    private var filterBadgesView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Filter By Status")
+                .font(AppTypography.caption)
+                .foregroundColor(AppColors.textSecondary(for: colorScheme))
+                .padding(.leading, 4)
+            
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ForEach(FilterType.allCases, id: \.self) { filter in
+                        switch filter {
+                        case .all:
+                            AllFilterBadgeView(
+                                isActive: store.activeFilter == .all
+                            ) { isActive in
+                                store.activeFilter = isActive ? .all : store.activeFilter
+                            }
+                            
+                        case .applied, .interview, .offer, .declined:
+                            let status = ApplicationStatus(rawValue: filter.rawValue)!
+                            StatusBadgeView(
+                                status: status,
+                                count: 1,
+                                isActive: store.activeFilter == filter
+                            ) { isActive in
+                                store.activeFilter = isActive ? filter : .all
+                            }
+                        }
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(AppColors.cardBackground(for: colorScheme))
+                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        )
     }
 }
 
