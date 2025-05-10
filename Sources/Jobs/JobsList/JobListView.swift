@@ -94,15 +94,29 @@ public struct JobsListView: View {
         Button {
             store.send(.binding(.set(\.selectedTab, tab)), animation: .spring(response: 0.3, dampingFraction: 0.7))
         } label: {
-            VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                if let jobApplicationStatusCounts = store.jobApplicationStatusCounts {
+                    let count = tab == .active ? jobApplicationStatusCounts.activeCount : jobApplicationStatusCounts.archivedCount
+                    Text("\(count)")
+                        .font(.caption2)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(store.selectedTab == tab
+                                    ? AppColors.accent(for: colorScheme)
+                                    : AppColors.primary(for: colorScheme).opacity(0.6)
+                                ))
+                }
                 Text(tab == .active ? "Active" : "Archived")
-                    .font(AppTypography.subtitle)
-                    .foregroundColor(store.selectedTab == tab
-                        ? AppColors.accent(for: colorScheme)
-                        : AppColors.primary(for: colorScheme).opacity(0.6))
-                    .fontWeight(store.selectedTab == tab ? .semibold : .regular)
-                    .padding(.bottom, 4)
             }
+            .font(AppTypography.subtitle)
+            .foregroundColor(store.selectedTab == tab
+                ? AppColors.accent(for: colorScheme)
+                : AppColors.primary(for: colorScheme).opacity(0.6))
+            .fontWeight(store.selectedTab == tab ? .semibold : .regular)
+            .padding(.bottom, 4)
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())

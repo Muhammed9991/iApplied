@@ -15,6 +15,12 @@ public struct JobsListLogic: Reducer, Sendable {
         case jobForm(JobFormLogic)
     }
     
+    @Selection
+    struct JobApplicationStatusCounts: QueryRepresentable, Equatable, Sendable {
+        var activeCount: Int
+        var archivedCount: Int
+    }
+    
     @ObservableState
     public struct State: Equatable, Sendable {
         @ObservationStateIgnored
@@ -35,6 +41,19 @@ public struct JobsListLogic: Reducer, Sendable {
         )
         var archivedJobApplications
         
+        @ObservationStateIgnored
+        @FetchOne(
+            wrappedValue: nil,
+            JobApplication
+                .select { _ in
+                    #sql("""
+                        COUNT(CASE WHEN isArchived = 0 THEN 1 END) AS activeCount,
+                        COUNT(CASE WHEN isArchived = 1 THEN 1 END) AS archivedCount
+                    """, as: JobApplicationStatusCounts?.self)
+                }
+        )
+        var jobApplicationStatusCounts: JobApplicationStatusCounts?
+
         var selectedTab: Tab = .active
         @Shared(.isCompact) var isCompact: Bool = false
         var jobApplication: JobApplication?

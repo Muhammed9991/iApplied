@@ -53,15 +53,16 @@ private extension Database {
         let currentDate = Date()
         let calendar = Calendar.current
 
-        let applications: [(Date, String, String, String)] = [
-            (calendar.date(byAdding: .minute, value: 1, to: currentDate)!, "iOS Developer", "Apple Inc.", "Applied"),
-            (calendar.date(byAdding: .day, value: -10, to: currentDate)!, "Senior Swift Developer", "Microsoft", "Interview"),
-            (calendar.date(byAdding: .day, value: -7, to: currentDate)!, "Mobile Engineer", "Google", "Offer"),
-            (calendar.date(byAdding: .day, value: -3, to: currentDate)!, "Software Engineer", "Meta", "Declined"),
-            (currentDate, "Swift Developer", "Amazon", "Declined")
+        let applications: [(Date, String, String, ApplicationStatus, Bool)] = [
+            (calendar.date(byAdding: .minute, value: 1, to: currentDate)!, "iOS Developer", "Apple Inc.", .applied, false),
+            (calendar.date(byAdding: .day, value: -10, to: currentDate)!, "Senior Swift Developer", "Microsoft", .interview, false),
+            (calendar.date(byAdding: .day, value: -7, to: currentDate)!, "Mobile Engineer", "Google", .offer, false),
+            (calendar.date(byAdding: .day, value: -3, to: currentDate)!, "Software Engineer", "Meta", .declined, false),
+            (currentDate, "Swift Developer", "Amazon", .declined, false),
+            (calendar.date(byAdding: .day, value: -4, to: currentDate)!, "Swift Developer", "Deliveroo", .offer, true)
         ]
 
-        for (dateApplied, title, company, status) in applications {
+        for (dateApplied, title, company, status, isArchived) in applications {
             try seed {
                 JobApplication(
                     title: title,
@@ -70,7 +71,7 @@ private extension Database {
                     dateApplied: dateApplied,
                     status: status,
                     notes: "Applied for \(title) position at \(company). Waiting for response.",
-                    isArchived: false
+                    isArchived: isArchived
                 )
             }
         }

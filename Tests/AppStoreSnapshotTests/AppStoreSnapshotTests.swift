@@ -10,7 +10,7 @@ import Testing
 import Theme
 
 @MainActor
-@Suite(.dependency(\.defaultDatabase, try testDatabase()))
+@Suite(.dependency(\.defaultDatabase, try testDatabase()), .snapshots(record: .all))
 struct AppStoreSnapshotTests {
     // MARK: - Active Job List
 
@@ -74,7 +74,7 @@ struct AppStoreSnapshotTests {
                     company: "Apple",
                     createdAt: .now,
                     dateApplied: .now,
-                    status: "Applied"
+                    status: .applied
                 )
             ),
             reducer: { JobFormLogic() }
@@ -99,7 +99,7 @@ struct AppStoreSnapshotTests {
                     company: "Apple",
                     createdAt: .now,
                     dateApplied: .now,
-                    status: "Applied"
+                    status: .applied
                 )
             ),
             reducer: { JobFormLogic() }
