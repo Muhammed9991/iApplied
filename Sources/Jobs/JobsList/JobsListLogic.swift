@@ -25,8 +25,27 @@ public struct JobsListLogic: Reducer, Sendable {
     
     @Selection
     struct JobApplicationStatusCounts: QueryRepresentable, Equatable, Sendable {
+        var appliedCount: Int
+        var interviewCount: Int
+        var offerCount: Int
+        var declinedCount: Int
         var activeCount: Int
         var archivedCount: Int
+        
+        func countForFilter(_ filterType: FilterType) -> Int {
+            switch filterType {
+            case .all:
+                appliedCount + interviewCount + offerCount + declinedCount
+            case .applied:
+                appliedCount
+            case .interview:
+                interviewCount
+            case .offer:
+                offerCount
+            case .declined:
+                declinedCount
+            }
+        }
     }
     
     @ObservableState
@@ -52,13 +71,17 @@ public struct JobsListLogic: Reducer, Sendable {
         @ObservationStateIgnored
         @FetchOne(
             wrappedValue: nil,
-            JobApplication
-                .select { _ in
-                    #sql("""
-                        COUNT(CASE WHEN isArchived = 0 THEN 1 END) AS activeCount,
-                        COUNT(CASE WHEN isArchived = 1 THEN 1 END) AS archivedCount
-                    """, as: JobApplicationStatusCounts?.self)
-                }
+            #sql("""
+            SELECT 
+            COUNT(CASE WHEN status = 'Applied' THEN 1 END) AS appliedCount,
+            COUNT(CASE WHEN status = 'Interview' THEN 1 END) AS interviewCount,
+            COUNT(CASE WHEN status = 'Offer' THEN 1 END) AS offerCount,
+            COUNT(CASE WHEN status = 'Declined' THEN 1 END) AS declinedCount,
+            
+            COUNT(CASE WHEN isArchived = 0 THEN 1 END) AS activeCount,
+            COUNT(CASE WHEN isArchived = 1 THEN 1 END) AS archivedCount
+            FROM jobApplications
+            """, as: JobApplicationStatusCounts?.self)
         )
         var jobApplicationStatusCounts: JobApplicationStatusCounts?
 

@@ -31,16 +31,16 @@ public struct JobsListView: View {
                     tabSelectionView
                         .padding(.bottom, 8)
                     
-                    // Status filter badges
-                    filterBadgesView
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 8)
-                    
                     if (store.selectedTab == .active && store.activeJobApplications.isEmpty) ||
                         (store.selectedTab == .archived && store.archivedJobApplications.isEmpty)
                     {
                         emptyStateView
                     } else {
+                        if store.selectedTab == .active {
+                            filterBadgesView
+                                .padding(.horizontal, 16)
+                                .padding(.bottom, 8)
+                        }
                         jobListContent
                     }
                     
@@ -303,7 +303,7 @@ public struct JobsListView: View {
                             let status = ApplicationStatus(rawValue: filter.rawValue)!
                             StatusBadgeView(
                                 status: status,
-                                count: 1,
+                                count: store.jobApplicationStatusCounts?.countForFilter(filter),
                                 isActive: store.activeFilter == filter
                             ) { isActive in
                                 store.activeFilter = isActive ? filter : .all
