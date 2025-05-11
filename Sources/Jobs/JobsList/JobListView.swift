@@ -228,17 +228,25 @@ public struct JobsListView: View {
                 .font(.system(size: 70))
                 .foregroundColor(AppColors.accent(for: colorScheme))
             
-            Text(store.selectedTab == .active ? "No Active Job Applications" : "No Archived Applications")
-                .font(AppTypography.title)
-                .foregroundColor(AppColors.primary(for: colorScheme))
-            
-            Text(store.selectedTab == .active ? "Tap + to add your first job application" : "Archived applications will appear here")
-                .font(AppTypography.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-            
-            if store.selectedTab == .active {
-                addApplicationButton
+            switch store.activeFilter {
+            case .all:
+                Text(store.selectedTab == .active ? "No Active Job Applications" : "No Archived Applications")
+                    .font(AppTypography.title)
+                    .foregroundColor(AppColors.primary(for: colorScheme))
+                
+                Text(store.selectedTab == .active ? "Tap + to add your first job application" : "Archived applications will appear here")
+                    .font(AppTypography.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                
+                if store.selectedTab == .active {
+                    addApplicationButton
+                }
+                
+            case .applied, .declined, .interview, .offer:
+                Text(store.activeFilter.emptyStateMessage)
+                    .font(AppTypography.title)
+                    .foregroundColor(AppColors.primary(for: colorScheme))
             }
             
             Spacer()
@@ -287,10 +295,9 @@ public struct JobsListView: View {
                         }
                     }
                 }
-                .padding(.vertical, 8)
             }
         }
-        .padding(12)
+        .padding(8)
     }
 }
 

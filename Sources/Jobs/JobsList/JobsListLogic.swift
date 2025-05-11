@@ -14,6 +14,18 @@ enum FilterType: String, CaseIterable, Hashable, Equatable, Sendable {
     case declined = "Declined"
 }
 
+extension FilterType {
+    var emptyStateMessage: String {
+        switch self {
+        case .all: "" // Not shown using this
+        case .applied: "You haven’t applied to any jobs yet."
+        case .interview: "You don’t have any interviews scheduled yet."
+        case .offer: "You haven’t received any job offers yet."
+        case .declined: "You haven’t declined any jobs yet."
+        }
+    }
+}
+
 @Reducer
 public struct JobsListLogic: Reducer, Sendable {
     public init() {}
@@ -112,7 +124,7 @@ public struct JobsListLogic: Reducer, Sendable {
                             .all
                             .where {
                                 switch activeFilter {
-                                case .all:  $0.isArchived == isArchivedTab
+                                case .all: $0.isArchived == isArchivedTab
                                 case .applied: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.applied
                                 case .interview: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.interview
                                 case .offer: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.offer
