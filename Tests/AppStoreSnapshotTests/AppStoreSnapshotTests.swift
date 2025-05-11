@@ -21,7 +21,7 @@ struct AppStoreSnapshotTests {
             reducer: { JobsListLogic() }
         )
         
-        try await store.$activeJobApplications.load(
+        try await store.$jobApplications.load(
             JobApplication
                 .all
                 .where { !$0.isArchived }
@@ -45,7 +45,7 @@ struct AppStoreSnapshotTests {
             reducer: { JobsListLogic() }
         )
         
-        try await store.$activeJobApplications.load(
+        try await store.$jobApplications.load(
             JobApplication
                 .all
                 .where { !$0.isArchived }

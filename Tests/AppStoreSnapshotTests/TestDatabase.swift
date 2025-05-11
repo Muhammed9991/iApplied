@@ -57,8 +57,8 @@ private extension Database {
             (calendar.date(byAdding: .minute, value: 1, to: currentDate)!, "iOS Developer", "Apple Inc.", .applied, false),
             (calendar.date(byAdding: .day, value: -10, to: currentDate)!, "Senior Swift Developer", "Microsoft", .interview, false),
             (calendar.date(byAdding: .day, value: -7, to: currentDate)!, "Mobile Engineer", "Google", .offer, false),
-            (calendar.date(byAdding: .day, value: -3, to: currentDate)!, "Software Engineer", "Meta", .declined, false),
-            (currentDate, "Swift Developer", "Amazon", .declined, false),
+            (calendar.date(byAdding: .day, value: -3, to: currentDate)!, "Software Engineer", "Meta", .offer, false),
+            (currentDate, "Swift Developer", "Amazon", .declined, true),
             (calendar.date(byAdding: .day, value: -4, to: currentDate)!, "Swift Developer", "Deliveroo", .offer, true)
         ]
 
