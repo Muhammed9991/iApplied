@@ -31,16 +31,13 @@ public struct JobsListView: View {
                     tabSelectionView
                         .padding(.bottom, 8)
                     
-                    if (store.selectedTab == .active && store.activeJobApplications.isEmpty) ||
-                        (store.selectedTab == .archived && store.archivedJobApplications.isEmpty)
-                    {
+                    filterBadgesView
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
+                    
+                    if store.jobApplications.isEmpty {
                         emptyStateView
                     } else {
-                        if store.selectedTab == .active {
-                            filterBadgesView
-                                .padding(.horizontal, 16)
-                                .padding(.bottom, 8)
-                        }
                         jobListContent
                     }
                     
@@ -100,8 +97,8 @@ public struct JobsListView: View {
             store.send(.binding(.set(\.selectedTab, tab)), animation: .spring(response: 0.3, dampingFraction: 0.7))
         } label: {
             HStack(spacing: 8) {
-                if let jobApplicationStatusCounts = store.jobApplicationStatusCounts {
-                    let count = tab == .active ? jobApplicationStatusCounts.activeCount : jobApplicationStatusCounts.archivedCount
+                if let tabCount = store.tabCount {
+                    let count = tab == .active ? tabCount.activeCount : tabCount.archivedCount
                     Text("\(count)")
                         .font(.caption2)
                         .foregroundColor(.white)
@@ -129,28 +126,14 @@ public struct JobsListView: View {
     
     private var jobListContent: some View {
         List {
-            if store.selectedTab == .active {
-                activeJobsSection
-            } else {
-                archivedJobsSection
+            ForEach(store.jobApplications) { job in
+                jobCardView(for: job)
             }
         }
         .padding(.horizontal)
-        .padding(.top, 8) // Add top padding to separate from tab bar
+        .padding(.top, 8)
         .listStyle(.plain)
         .background(AppColors.background(for: colorScheme))
-    }
-    
-    private var activeJobsSection: some View {
-        ForEach(store.filteredActiveJobs) { job in
-            jobCardView(for: job)
-        }
-    }
-    
-    private var archivedJobsSection: some View {
-        ForEach(store.archivedJobApplications) { job in
-            jobCardView(for: job)
-        }
     }
     
     private func jobCardView(for job: JobApplication) -> some View {
@@ -212,9 +195,7 @@ public struct JobsListView: View {
     
     private var leadingToolbarItems: some ToolbarContent {
         Group {
-            if (store.selectedTab == .active && !store.activeJobApplications.isEmpty) ||
-                (store.selectedTab == .archived && !store.archivedJobApplications.isEmpty)
-            {
+            if !store.jobApplications.isEmpty {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
                         store.isCompact.toggle()
@@ -283,11 +264,6 @@ public struct JobsListView: View {
     
     private var filterBadgesView: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Filter By Status")
-                .font(AppTypography.caption)
-                .foregroundColor(AppColors.textSecondary(for: colorScheme))
-                .padding(.leading, 4)
-            
             ScrollView(.horizontal) {
                 HStack(spacing: 8) {
                     ForEach(FilterType.allCases, id: \.self) { filter in
@@ -315,11 +291,6 @@ public struct JobsListView: View {
             }
         }
         .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(AppColors.cardBackground(for: colorScheme))
-                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-        )
     }
 }
 

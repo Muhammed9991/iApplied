@@ -23,65 +23,41 @@ public struct JobsListLogic: Reducer, Sendable {
         case jobForm(JobFormLogic)
     }
     
-    @Selection
-    struct JobApplicationStatusCounts: QueryRepresentable, Equatable, Sendable {
-        var appliedCount: Int
-        var interviewCount: Int
-        var offerCount: Int
-        var declinedCount: Int
-        var activeCount: Int
-        var archivedCount: Int
-        
-        func countForFilter(_ filterType: FilterType) -> Int {
-            switch filterType {
-            case .all:
-                appliedCount + interviewCount + offerCount + declinedCount
-            case .applied:
-                appliedCount
-            case .interview:
-                interviewCount
-            case .offer:
-                offerCount
-            case .declined:
-                declinedCount
-            }
-        }
-    }
-    
     @ObservableState
     public struct State: Equatable, Sendable {
         @ObservationStateIgnored
-        @FetchAll(
-            JobApplication
-                .all
-                .where { !$0.isArchived }
-                .order { $0.dateApplied.desc() }
-        )
-        var activeJobApplications
+        @FetchAll(JobApplication.all)
+        var allJobApplications
         
         @ObservationStateIgnored
-        @FetchAll(
+        @FetchAll(JobApplication.all.where { !$0.isArchived }.order { $0.dateApplied.desc() })
+        var jobApplications
+
+        @ObservationStateIgnored
+        @FetchOne(
+            wrappedValue: nil,
             JobApplication
-                .all
-                .where(\.isArchived)
-                .order { $0.dateApplied.desc() }
+                .select { _ in
+                    #sql("""
+                    COUNT(CASE WHEN isArchived = 0 THEN 1 END) AS activeCount,
+                    COUNT(CASE WHEN isArchived = 1 THEN 1 END) AS archivedCount
+                    """, as: TabCount?.self)
+                }
         )
-        var archivedJobApplications
+        var tabCount: TabCount?
         
         @ObservationStateIgnored
         @FetchOne(
             wrappedValue: nil,
-            #sql("""
-            SELECT 
-            COUNT(CASE WHEN status = 'Applied' THEN 1 END) AS appliedCount,
-            COUNT(CASE WHEN status = 'Interview' THEN 1 END) AS interviewCount,
-            COUNT(CASE WHEN status = 'Offer' THEN 1 END) AS offerCount,
-            COUNT(CASE WHEN status = 'Declined' THEN 1 END) AS declinedCount,
-            
-            COUNT(CASE WHEN isArchived = 0 THEN 1 END) AS activeCount,
-            COUNT(CASE WHEN isArchived = 1 THEN 1 END) AS archivedCount
-            FROM jobApplications
-            """, as: JobApplicationStatusCounts?.self)
+            JobApplication
+                .select { _ in
+                    #sql("""
+                    COUNT(CASE WHEN status = 'Applied' AND isArchived = 0 THEN 1 END) AS appliedCount,
+                    COUNT(CASE WHEN status = 'Interview' AND isArchived = 0 THEN 1 END) AS interviewCount,
+                    COUNT(CASE WHEN status = 'Offer' AND isArchived = 0 THEN 1 END) AS offerCount,
+                    COUNT(CASE WHEN status = 'Declined' AND isArchived = 0 THEN 1 END) AS declinedCount
+                    """, as: JobApplicationStatusCounts?.self)
+                }
         )
         var jobApplicationStatusCounts: JobApplicationStatusCounts?
         
@@ -91,62 +67,6 @@ public struct JobsListLogic: Reducer, Sendable {
         @Presents var destination: Destination.State?
         @Presents var alert: AlertState<Action.Alert>?
         var activeFilter: FilterType = .all
-        
-        @ObservationStateIgnored
-        @FetchAll(
-            JobApplication
-                .all
-                .where { !$0.isArchived && $0.status == ApplicationStatus.applied }
-                .order { $0.dateApplied.desc() }
-        )
-        var filteredAppliedJobs: [JobApplication]
-
-        @ObservationStateIgnored
-        @FetchAll(
-            JobApplication
-                .all
-                .where { !$0.isArchived && $0.status == ApplicationStatus.interview }
-                .order { $0.dateApplied.desc() }
-        )
-        var filteredInterviewJobs: [JobApplication]
-
-        @ObservationStateIgnored
-        @FetchAll(
-            JobApplication
-                .all
-                .where { !$0.isArchived && $0.status == ApplicationStatus.offer }
-                .order { $0.dateApplied.desc() }
-        )
-        var filteredOfferJobs: [JobApplication]
-
-        @ObservationStateIgnored
-        @FetchAll(
-            JobApplication
-                .all
-                .where { !$0.isArchived && $0.status == ApplicationStatus.declined }
-                .order { $0.dateApplied.desc() }
-        )
-        var filteredDeclinedJobs: [JobApplication]
-
-        @ObservationStateIgnored
-        @FetchAll(
-            JobApplication
-                .all
-                .where { !$0.isArchived }
-                .order { $0.dateApplied.desc() }
-        )
-        var filteredAllJobs: [JobApplication]
-
-        
-        var filteredActiveJobs: [JobApplication] {
-            switch activeFilter {
-            case .all: activeJobApplications
-            case .applied: filteredAppliedJobs
-            case .declined: filteredDeclinedJobs
-            case .interview: filteredInterviewJobs
-            case .offer: filteredOfferJobs
-            }
-        }
 
         public enum Tab: Equatable, Sendable {
             case active
@@ -178,6 +98,65 @@ public struct JobsListLogic: Reducer, Sendable {
         BindingReducer()
         Reduce<State, Action> { state, action in
             switch action {
+            case .binding(\.activeFilter):
+                return .run { [
+                    jobApplications = state.$jobApplications,
+                    activeFilter = state.activeFilter,
+                    selectedTab = state.selectedTab
+                ] _ in
+                    
+                    let isArchivedTab = selectedTab == .archived
+                    
+                    try await jobApplications.load(
+                        JobApplication
+                            .all
+                            .where {
+                                switch activeFilter {
+                                case .all:  $0.isArchived == isArchivedTab
+                                case .applied: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.applied
+                                case .interview: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.interview
+                                case .offer: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.offer
+                                case .declined: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.declined
+                                }
+                            }
+                            .order { $0.dateApplied.desc() }
+                    )
+                }
+                
+            case .binding(\.selectedTab):
+                return .run { [
+                    jobApplicationStatusCounts = state.$jobApplicationStatusCounts,
+                    jobApplications = state.$jobApplications,
+                    selectedTab = state.selectedTab
+                ] _ in
+                  
+                    try await jobApplications.load(
+                        JobApplication
+                            .all
+                            .where {
+                                switch selectedTab {
+                                case .active: !$0.isArchived
+                                case .archived: $0.isArchived
+                                }
+                            }
+                            .order { $0.dateApplied.desc() }
+                    )
+                    
+                    let isArchivedTab = selectedTab == .archived ? 1 : 0
+                    
+                    try await jobApplicationStatusCounts.load(
+                        JobApplication
+                            .select { _ in
+                                #sql("""
+                                COUNT(CASE WHEN status = 'Applied' AND isArchived = \(isArchivedTab) THEN 1 END) AS appliedCount,
+                                COUNT(CASE WHEN status = 'Interview' AND isArchived = \(isArchivedTab) THEN 1 END) AS interviewCount,
+                                COUNT(CASE WHEN status = 'Offer' AND isArchived = \(isArchivedTab) THEN 1 END) AS offerCount,
+                                COUNT(CASE WHEN status = 'Declined' AND isArchived = \(isArchivedTab) THEN 1 END) AS declinedCount
+                                """, as: JobApplicationStatusCounts?.self)
+                            }
+                    )
+                }
+            
             case .alert(.presented(.confirmDeleteJob)):
                 state.alert = nil
                 return .run { [jobApplication = state.jobApplication] _ in
@@ -261,7 +240,7 @@ public struct JobsListLogic: Reducer, Sendable {
                 
             case let .destination(.presented(.jobForm(.delegate(.onSaveButtonTapped(job))))):
                 
-                return .run { [jobApplications = state.activeJobApplications] _ in
+                return .run { [jobApplications = state.allJobApplications] _ in
                     
                     guard jobApplications.firstIndex(where: { $0.id == job.id }) != nil else {
                         // Add new job
@@ -314,5 +293,38 @@ public extension JobsListLogic.State {
         self.destination = destination
         self.alert = alert
         self.selectedTab = selectedTab
+    }
+}
+
+// MARK: - Custom selections
+
+extension JobsListLogic {
+    @Selection
+    struct TabCount: QueryRepresentable, Equatable, Sendable {
+        var activeCount: Int
+        var archivedCount: Int
+    }
+    
+    @Selection
+    struct JobApplicationStatusCounts: QueryRepresentable, Equatable, Sendable {
+        var appliedCount: Int
+        var interviewCount: Int
+        var offerCount: Int
+        var declinedCount: Int
+        
+        func countForFilter(_ filterType: FilterType) -> Int {
+            switch filterType {
+            case .all:
+                appliedCount + interviewCount + offerCount + declinedCount
+            case .applied:
+                appliedCount
+            case .interview:
+                interviewCount
+            case .offer:
+                offerCount
+            case .declined:
+                declinedCount
+            }
+        }
     }
 }
