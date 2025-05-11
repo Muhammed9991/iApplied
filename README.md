@@ -3,6 +3,14 @@
 A lightweight iOS app for tracking job applications, managing CV details, and scheduling timely follow-ups — all while keeping your data 100% offline and private.
 
 ---
+📲 Get the App
+
+Download iApplied now from the [App Store](https://apps.apple.com/gb/app/iapplied/id6745438596).
+
+![appstore](https://github.com/user-attachments/assets/278c2733-8d0c-49a0-ac48-f430cd5c98d9)
+
+
+---
 
 ## 📦 About
 
