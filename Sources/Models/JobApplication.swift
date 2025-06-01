@@ -1,5 +1,3 @@
-//  Created by Muhammed Mahmood on 19/04/2025.
-
 import Foundation
 import GRDB
 import SharingGRDB
@@ -9,11 +7,11 @@ public struct JobApplication: Identifiable, Sendable, Equatable {
     public var id: Int64?
     public var title: String
     public var company: String
-    @Column(as: Date.ISO8601Representation.self) public var createdAt: Date
-    @Column(as: Date.ISO8601Representation.self) public var dateApplied: Date
+    public var createdAt: Date
+    public var dateApplied: Date
     public var status: ApplicationStatus
     public var notes: String?
-    @Column(as: Date.ISO8601Representation?.self) public var lastFollowUpDate: Date?
+    public var lastFollowUpDate: Date?
     public var isArchived: Bool = false
 
     public init(

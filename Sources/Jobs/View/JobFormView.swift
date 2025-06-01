@@ -1,5 +1,3 @@
-//  Created by Muhammed Mahmood on 19/04/2025.
-
 import ComposableArchitecture
 import Models
 import SwiftUI
@@ -236,10 +234,11 @@ public struct JobFormLogic: Reducer, Sendable {
 
 extension JobFormLogic.State {
     init(jobApplication: JobApplication? = nil) {
+        @Dependency(\.date.now) var now
         self.jobApplication = jobApplication
         self.title = jobApplication?.title ?? ""
         self.company = jobApplication?.company ?? ""
-        self.dateApplied = jobApplication?.dateApplied ?? Date()
+        self.dateApplied = jobApplication?.dateApplied ?? now
         self.status = jobApplication?.status ?? ApplicationStatus.applied
         self.notes = jobApplication?.notes ?? ""
     }

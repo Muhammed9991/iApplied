@@ -1,5 +1,3 @@
-//  Created by Muhammed Mahmood on 10/05/2025.
-
 import SwiftUI
 import Theme
 
