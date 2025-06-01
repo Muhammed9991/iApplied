@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "25AFE0C3-8DA0-4C89-B3E5-146415D962E9",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "CVTest",
+        "name" : "CVTest"
+      }
+    }
+  ],
+  "version" : 1
+}
