@@ -7,7 +7,7 @@ import SharingGRDB
 @Table
 public struct ProfessionalLink: Identifiable, Sendable, Equatable {
     public var id: Int64?
-    @Column(as: Date.ISO8601Representation.self) public var createdAt: Date
+    public var createdAt: Date
     public var title: String
     public var link: String
     public var image: String
