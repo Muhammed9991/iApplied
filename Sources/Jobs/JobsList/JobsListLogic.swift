@@ -173,8 +173,10 @@ public struct JobsListLogic: Reducer, Sendable {
                 state.alert = nil
                 return .run { [jobApplication = state.jobApplication] _ in
                     precondition(jobApplication != nil, "How can this even be nil at this point?")
-                    try database.write { db in
-                        try JobApplication.delete(jobApplication!).execute(db)
+                    withErrorReporting {
+                        try database.write { db in
+                            try JobApplication.delete(jobApplication!).execute(db)
+                        }
                     }
                     
                     if let id = jobApplication?.id {
@@ -207,11 +209,12 @@ public struct JobsListLogic: Reducer, Sendable {
                 
             case let .updateJobStatus(job: job, status: status):
                 return .run { _ in
-                    
-                    try await database.write { db in
-                        var updatedJob = job
-                        updatedJob.status = status
-                        try JobApplication.update(updatedJob).execute(db)
+                    await withErrorReporting {
+                        try await database.write { db in
+                            var updatedJob = job
+                            updatedJob.status = status
+                            try JobApplication.update(updatedJob).execute(db)
+                        }
                     }
                     
                     if let id = job.id {
@@ -225,11 +228,12 @@ public struct JobsListLogic: Reducer, Sendable {
                 
             case let .archiveJob(job: job):
                 return .run { _ in
-                    
-                    try await database.write { db in
-                        var updatedJob = job
-                        updatedJob.isArchived = true
-                        try JobApplication.update(updatedJob).execute(db)
+                    await withErrorReporting {
+                        try await database.write { db in
+                            var updatedJob = job
+                            updatedJob.isArchived = true
+                            try JobApplication.update(updatedJob).execute(db)
+                        }
                     }
                     
                     if let id = job.id {
@@ -239,10 +243,12 @@ public struct JobsListLogic: Reducer, Sendable {
                 
             case let .unArchiveJob(job: job):
                 return .run { _ in
-                    try await database.write { db in
-                        var updatedJob = job
-                        updatedJob.isArchived = false
-                        try JobApplication.update(updatedJob).execute(db)
+                    await withErrorReporting {
+                        try await database.write { db in
+                            var updatedJob = job
+                            updatedJob.isArchived = false
+                            try JobApplication.update(updatedJob).execute(db)
+                        }
                     }
                     
                     if job.status == ApplicationStatus.applied {
@@ -264,8 +270,10 @@ public struct JobsListLogic: Reducer, Sendable {
                     }
                     
                     // Update existing job
-                    try await database.write { db in
-                        try JobApplication.update(job).execute(db)
+                    await withErrorReporting {
+                        try await database.write { db in
+                            try JobApplication.update(job).execute(db)
+                        }
                     }
                     try await rescheduleAllNotifications(jobApplications: jobApplications)
                 }
