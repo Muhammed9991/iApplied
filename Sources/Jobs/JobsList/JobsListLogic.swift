@@ -84,6 +84,28 @@ public struct JobsListLogic: Reducer, Sendable {
             case active
             case archived
         }
+        
+        var jobApplicationQuery: some SelectStatementOf<JobApplication> {
+            let isArchivedTab = selectedTab == .archived
+            
+            return JobApplication
+                .where {
+                    switch selectedTab {
+                    case .active: !$0.isArchived
+                    case .archived: $0.isArchived
+                    }
+                }
+                .where {
+                    switch activeFilter {
+                    case .all: $0.isArchived == isArchivedTab
+                    case .applied: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.applied
+                    case .interview: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.interview
+                    case .offer: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.offer
+                    case .declined: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.declined
+                    }
+                }
+                .order { $0.dateApplied.desc() }
+        }
     }
 
     public enum Action: Equatable, Sendable, BindableAction {
@@ -113,46 +135,20 @@ public struct JobsListLogic: Reducer, Sendable {
             case .binding(\.activeFilter):
                 return .run { [
                     jobApplications = state.$jobApplications,
-                    activeFilter = state.activeFilter,
-                    selectedTab = state.selectedTab
+                    jobApplicationQuery = state.jobApplicationQuery
                 ] _ in
-                    
-                    let isArchivedTab = selectedTab == .archived
-                    
-                    try await jobApplications.load(
-                        JobApplication
-                            .all
-                            .where {
-                                switch activeFilter {
-                                case .all: $0.isArchived == isArchivedTab
-                                case .applied: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.applied
-                                case .interview: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.interview
-                                case .offer: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.offer
-                                case .declined: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.declined
-                                }
-                            }
-                            .order { $0.dateApplied.desc() }
-                    )
+                    await updateQuery(jobApplications: jobApplications, jobApplicationQuery: jobApplicationQuery)
                 }
                 
             case .binding(\.selectedTab):
                 return .run { [
                     jobApplicationStatusCounts = state.$jobApplicationStatusCounts,
                     jobApplications = state.$jobApplications,
-                    selectedTab = state.selectedTab
+                    selectedTab = state.selectedTab,
+                    jobApplicationQuery = state.jobApplicationQuery
                 ] _ in
                   
-                    try await jobApplications.load(
-                        JobApplication
-                            .all
-                            .where {
-                                switch selectedTab {
-                                case .active: !$0.isArchived
-                                case .archived: $0.isArchived
-                                }
-                            }
-                            .order { $0.dateApplied.desc() }
-                    )
+                    await updateQuery(jobApplications: jobApplications, jobApplicationQuery: jobApplicationQuery)
                     
                     let isArchivedTab = selectedTab == .archived ? 1 : 0
                     
@@ -337,6 +333,16 @@ extension JobsListLogic {
             case .declined:
                 declinedCount
             }
+        }
+    }
+}
+
+// MARK: Queries
+
+extension JobsListLogic {
+    func updateQuery(jobApplications: FetchAll<JobApplication>, jobApplicationQuery: some SelectStatementOf<JobApplication>) async {
+        await withErrorReporting {
+            try await jobApplications.load(jobApplicationQuery, animation: .default)
         }
     }
 }
