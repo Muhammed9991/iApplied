@@ -85,6 +85,8 @@ public struct JobsListLogic: Reducer, Sendable {
             case archived
         }
         
+        // Queries
+        
         var jobApplicationQuery: some SelectStatementOf<JobApplication> {
             let isArchivedTab = selectedTab == .archived
             
@@ -147,21 +149,23 @@ public struct JobsListLogic: Reducer, Sendable {
                     selectedTab = state.selectedTab,
                     jobApplicationQuery = state.jobApplicationQuery
                 ] _ in
-                  
+                    
                     await updateQuery(jobApplications: jobApplications, jobApplicationQuery: jobApplicationQuery)
-                    
-                    let isArchivedTab = selectedTab == .archived ? 1 : 0
-                    
+                                        
                     try await jobApplicationStatusCounts.load(
                         JobApplication
-                            .select { _ in
-                                #sql("""
-                                COUNT(CASE WHEN status = 'Applied' AND isArchived = \(isArchivedTab) THEN 1 END) AS appliedCount,
-                                COUNT(CASE WHEN status = 'Interview' AND isArchived = \(isArchivedTab) THEN 1 END) AS interviewCount,
-                                COUNT(CASE WHEN status = 'Offer' AND isArchived = \(isArchivedTab) THEN 1 END) AS offerCount,
-                                COUNT(CASE WHEN status = 'Declined' AND isArchived = \(isArchivedTab) THEN 1 END) AS declinedCount
-                                """, as: JobApplicationStatusCounts?.self)
-                            }
+                            .select {
+                                let isArchivedTab = selectedTab == .archived
+                                
+                                let jobApplicationStatusCountsColumn: JobApplicationStatusCounts.Columns? = JobApplicationStatusCounts.Columns(
+                                    appliedCount: $0.statusCount(status: .applied, isArchived: isArchivedTab),
+                                    interviewCount: $0.statusCount(status: .interview, isArchived: isArchivedTab),
+                                    offerCount: $0.statusCount(status: .offer, isArchived: isArchivedTab),
+                                    declinedCount: $0.statusCount(status: .declined, isArchived: isArchivedTab)
+                                )
+                                return jobApplicationStatusCountsColumn
+                            },
+                        animation: .default
                     )
                 }
             
@@ -344,5 +348,16 @@ extension JobsListLogic {
         await withErrorReporting {
             try await jobApplications.load(jobApplicationQuery, animation: .default)
         }
+    }
+}
+
+private extension JobApplication.TableColumns {
+    func statusCount(status: ApplicationStatus, isArchived: Bool) -> some QueryExpression<Int> {
+        Case()
+            .when(
+                self.status.eq(status).and(self.isArchived.eq(isArchived)),
+                then: 1
+            )
+            .count()
     }
 }
