@@ -157,8 +157,10 @@ public struct CVLogic: Sendable {
                 state.alert = nil
                 return .run { [professionalLink = state.professionalLink] _ in
                     precondition(professionalLink != nil, "How can this even be nil at this point?")
-                    try database.write { db in
-                        try ProfessionalLink.delete(professionalLink!).execute(db)
+                    withErrorReporting {
+                        try database.write { db in
+                            try ProfessionalLink.delete(professionalLink!).execute(db)
+                        }
                     }
                 }
                 
@@ -167,15 +169,19 @@ public struct CVLogic: Sendable {
                 switch delegate {
                 case let .onSaveLink(professionalLink):
                     return .run { _ in
-                        try await database.write { db in
-                            try ProfessionalLink.insert(professionalLink).execute(db)
+                        await withErrorReporting {
+                            try await database.write { db in
+                                try ProfessionalLink.insert(professionalLink).execute(db)
+                            }
                         }
                     }
                     
                 case let .onEditLink(professionalLink):
                     return .run { _ in
-                        try await database.write { db in
-                            try ProfessionalLink.update(professionalLink).execute(db)
+                        await withErrorReporting {
+                            try await database.write { db in
+                                try ProfessionalLink.update(professionalLink).execute(db)
+                            }
                         }
                     }
                 }
