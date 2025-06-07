@@ -39,7 +39,7 @@ public struct RootView: View {
                     Label("CV", systemImage: "doc.text")
                 }
 
-            SettingsView()
+            SettingsView(store: store.scope(state: \.settings, action: \.settings))
                 .tag(RootLogic.Tab.settings)
                 .tabItem {
                     Label("Settings", systemImage: "gear")
@@ -72,17 +72,20 @@ public struct RootLogic: Reducer {
         var currentTab = Tab.jobList
         public var jobList = JobsListLogic.State()
         var cv = CVLogic.State()
+        var settings = SettingsLogic.State()
         var isAuthorisedForNotifications: Bool = false
 
         public init(
             currentTab: Tab = Tab.jobList,
             jobList: JobsListLogic.State = JobsListLogic.State(),
             cv: CVLogic.State = CVLogic.State(),
+            settings: SettingsLogic.State = SettingsLogic.State(),
             isAuthorisedForNotifications: Bool = false
         ) {
             self.currentTab = currentTab
             self.jobList = jobList
             self.cv = cv
+            self.settings = settings
             self.isAuthorisedForNotifications = isAuthorisedForNotifications
         }
     }
@@ -90,6 +93,7 @@ public struct RootLogic: Reducer {
     public enum Action: Equatable, Sendable {
         case jobList(JobsListLogic.Action)
         case cv(CVLogic.Action)
+        case settings(SettingsLogic.Action)
         case selectTab(Tab)
         case checNotificationkAuthorisation
         case setNotificationAuthorisation(Bool)
@@ -101,6 +105,9 @@ public struct RootLogic: Reducer {
         }
         Scope(state: \.cv, action: \.cv) {
             CVLogic()
+        }
+        Scope(state: \.settings, action: \.settings) {
+            SettingsLogic()
         }
 
         Reduce<State, Action> { state, action in
@@ -141,7 +148,7 @@ public struct RootLogic: Reducer {
                 state.isAuthorisedForNotifications = isAuthorisedForNotifications
                 return .none
 
-            case .cv, .jobList:
+            case .cv, .jobList, .settings:
                 return .none
 
             case let .selectTab(tab):
