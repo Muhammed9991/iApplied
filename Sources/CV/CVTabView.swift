@@ -163,6 +163,7 @@ public struct CVLogic: Sendable {
                         }
                     }
                 }
+                .animation(.default)
                 
             case let .destination(.presented(.professionalLink(.delegate(delegate)))):
                 

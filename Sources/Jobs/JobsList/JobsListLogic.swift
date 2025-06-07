@@ -130,10 +130,7 @@ public struct JobsListLogic: Reducer, Sendable {
         Reduce<State, Action> { state, action in
             switch action {
             case .binding(\.activeFilter):
-                return .run { [
-                    jobApplications = state.$jobApplications,
-                    jobApplicationQuery = state.jobApplicationQuery
-                ] _ in
+                return .run { [jobApplications = state.$jobApplications, jobApplicationQuery = state.jobApplicationQuery] _ in
                     await updateQuery(jobApplications: jobApplications, jobApplicationQuery: jobApplicationQuery)
                 }
                 
@@ -204,7 +201,9 @@ public struct JobsListLogic: Reducer, Sendable {
                     
                     if let id = job.id {
                         if status == .applied {
-                            try await notificationManager.scheduleFollowUpNotification(job)
+                            await withErrorReporting {
+                                try await notificationManager.scheduleFollowUpNotification(job)
+                            }
                         } else {
                             notificationManager.cancelNotification("\(id)")
                         }
@@ -237,7 +236,9 @@ public struct JobsListLogic: Reducer, Sendable {
                     }
                     
                     if job.status == ApplicationStatus.applied {
-                        try await notificationManager.scheduleFollowUpNotification(job)
+                        await withErrorReporting {
+                            try await notificationManager.scheduleFollowUpNotification(job)
+                        }
                     }
                 }
                 
@@ -247,10 +248,12 @@ public struct JobsListLogic: Reducer, Sendable {
                     
                     guard jobApplications.firstIndex(where: { $0.id == job.id }) != nil else {
                         // Add new job
-                        try await database.write { db in
-                            try JobApplication.insert(job).execute(db)
+                        await withErrorReporting {
+                            try await database.write { db in
+                                try JobApplication.insert(job).execute(db)
+                            }
+                            try await rescheduleAllNotifications(jobApplications: jobApplications)
                         }
-                        try await rescheduleAllNotifications(jobApplications: jobApplications)
                         return
                     }
                     
@@ -260,7 +263,10 @@ public struct JobsListLogic: Reducer, Sendable {
                             try JobApplication.update(job).execute(db)
                         }
                     }
-                    try await rescheduleAllNotifications(jobApplications: jobApplications)
+                    
+                    await withErrorReporting {
+                        try await rescheduleAllNotifications(jobApplications: jobApplications)
+                    }
                 }
                 
             case .binding, .destination, .alert:
