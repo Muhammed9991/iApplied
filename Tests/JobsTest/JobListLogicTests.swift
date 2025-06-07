@@ -9,10 +9,11 @@ import Testing
 // swiftformat:disable hoistTry
 
 @MainActor
+@Suite(.dependency(\.defaultDatabase, try testDatabase()))
 struct JobsListLogicTests {
     // MARK: - Active filter
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func activeTab_shows_all_nonArchived_jobs() async {
         let store = TestStore(initialState: JobsListLogic.State()) {
             JobsListLogic()
@@ -24,7 +25,7 @@ struct JobsListLogicTests {
         #expect(store.state.jobApplications.count == 4)
     }
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func activeTab_filters_applied_jobs() async {
         let store = TestStore(initialState: JobsListLogic.State()) {
             JobsListLogic()
@@ -39,7 +40,7 @@ struct JobsListLogicTests {
         #expect(store.state.jobApplications.first?.status == .applied)
     }
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func activeTab_filters_declined_jobs() async {
         let store = TestStore(initialState: JobsListLogic.State()) {
             JobsListLogic()
@@ -53,7 +54,7 @@ struct JobsListLogicTests {
         #expect(store.state.jobApplications.count == 0)
     }
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func activeTab_filters_interview_jobs() async {
         let store = TestStore(initialState: JobsListLogic.State()) {
             JobsListLogic()
@@ -68,7 +69,7 @@ struct JobsListLogicTests {
         #expect(store.state.jobApplications.first?.status == .interview)
     }
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func activeTab_filters_offer_jobs() async {
         let store = TestStore(initialState: JobsListLogic.State()) {
             JobsListLogic()
@@ -83,7 +84,7 @@ struct JobsListLogicTests {
         #expect(store.state.jobApplications.allSatisfy { $0.status == .offer })
     }
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func archivedTab_shows_all_archived_jobs() async {
         let store = TestStore(initialState: JobsListLogic.State()) {
             JobsListLogic()
@@ -98,7 +99,7 @@ struct JobsListLogicTests {
         #expect(try store.state.jobApplications.allSatisfy(\.isArchived))
     }
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func archivedTab_filters_offer_jobs() async {
         let store = TestStore(initialState: JobsListLogic.State()) {
             JobsListLogic()
@@ -116,7 +117,7 @@ struct JobsListLogicTests {
         #expect(store.state.jobApplications.first?.isArchived == true)
     }
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func archivedTab_filters_declined_jobs() async {
         let store = TestStore(initialState: JobsListLogic.State()) {
             JobsListLogic()
@@ -136,7 +137,7 @@ struct JobsListLogicTests {
 
     // MARK: - Selected tab
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func activeTab_loads_nonArchived_jobs_and_counts() async {
         let store = TestStore(initialState: JobsListLogic.State()) {
             JobsListLogic()
@@ -154,7 +155,7 @@ struct JobsListLogicTests {
         #expect(counts?.declinedCount == 0)
     }
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func archivedTab_loads_archived_jobs_and_counts() async {
         let store = TestStore(initialState: JobsListLogic.State()) {
             JobsListLogic()
@@ -176,7 +177,7 @@ struct JobsListLogicTests {
 
     // MARK: - Editing job application
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func onEditButtonTapped_setsJobAndNavigatesToForm() async {
         let job = JobApplication(
             id: 123,
@@ -201,7 +202,7 @@ struct JobsListLogicTests {
 
     // MARK: - Adding application
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func onAddApplicationTapped_setsDestinationToNewJobForm() async {
         let store = TestStore(initialState: JobsListLogic.State()) {
             JobsListLogic()
@@ -216,7 +217,7 @@ struct JobsListLogicTests {
 
     // MARK: - Deleting jobs
 
-    @Test(.dependency(\.defaultDatabase, try testDatabase()))
+    @Test
     func onDeleteButtonTapped_setsJobAndShowsAlert() async {
         let job = JobApplication(
             id: 1,
@@ -246,6 +247,44 @@ struct JobsListLogicTests {
                 }
             }
         }
+    }
+
+    // MARK: - Tab counts
+
+    @Test
+    func tabCount_shows_active_and_archived_counts() async throws {
+        let store = TestStore(initialState: JobsListLogic.State()) {
+            JobsListLogic()
+        }
+
+        // From testDatabase() we know:
+        // - 4 active jobs (non-archived)
+        // - 2 archived jobs
+        try await store.state.$tabCount.load()
+        
+        #expect(store.state.tabCount?.activeCount == 4)
+        #expect(store.state.tabCount?.archivedCount == 2)
+    }
+
+    @Test
+    func tabCount_updates_when_switching_tabs() async throws {
+        let store = TestStore(initialState: JobsListLogic.State()) {
+            JobsListLogic()
+        }
+
+        try await store.state.$tabCount.load()
+        // Initial state (active tab)
+        #expect(store.state.tabCount?.activeCount == 4)
+        #expect(store.state.tabCount?.archivedCount == 2)
+
+        // Switch to archived tab
+        await store.send(.binding(.set(\.selectedTab, .archived))) {
+            $0.selectedTab = .archived
+        }
+
+        try await store.state.$tabCount.load()
+        #expect(store.state.tabCount?.activeCount == 4)
+        #expect(store.state.tabCount?.archivedCount == 2)
     }
 }
 

@@ -37,41 +37,38 @@ public struct JobsListLogic: Reducer, Sendable {
     
     @ObservableState
     public struct State: Equatable, Sendable {
+        public init(
+            jobApplication: JobApplication? = nil,
+            destination: JobsListLogic.Destination.State? = nil,
+            alert: AlertState<JobsListLogic.Action.Alert>? = nil,
+            selectedTab: Tab = .active
+        ) {
+            self.selectedTab = selectedTab
+            
+            self._jobApplications = FetchAll(JobApplication.all.where { !$0.isArchived }.order { $0.dateApplied.desc() })
+            
+            let isArchived = selectedTab == .archived
+            
+            self._tabCount = FetchOne(wrappedValue: nil, Select.tabCount(isArchivedTab: isArchived))
+            self._jobApplicationStatusCounts = FetchOne(wrappedValue: nil, Select.jobApplicationStatusCounts(isArchivedTab: isArchived))
+            
+            self.jobApplication = jobApplication
+            self.destination = destination
+            self.alert = alert
+        }
+        
         @ObservationStateIgnored
         @FetchAll(JobApplication.all)
         var allJobApplications
         
         @ObservationStateIgnored
-        @FetchAll(JobApplication.all.where { !$0.isArchived }.order { $0.dateApplied.desc() })
-        var jobApplications
+        @FetchAll var jobApplications: [JobApplication]
 
         @ObservationStateIgnored
-        @FetchOne(
-            wrappedValue: nil,
-            JobApplication
-                .select { _ in
-                    #sql("""
-                    COUNT(CASE WHEN isArchived = 0 THEN 1 END) AS activeCount,
-                    COUNT(CASE WHEN isArchived = 1 THEN 1 END) AS archivedCount
-                    """, as: TabCount?.self)
-                }
-        )
-        var tabCount: TabCount?
+        @FetchOne var tabCount: TabCount?
         
         @ObservationStateIgnored
-        @FetchOne(
-            wrappedValue: nil,
-            JobApplication
-                .select { _ in
-                    #sql("""
-                    COUNT(CASE WHEN status = 'Applied' AND isArchived = 0 THEN 1 END) AS appliedCount,
-                    COUNT(CASE WHEN status = 'Interview' AND isArchived = 0 THEN 1 END) AS interviewCount,
-                    COUNT(CASE WHEN status = 'Offer' AND isArchived = 0 THEN 1 END) AS offerCount,
-                    COUNT(CASE WHEN status = 'Declined' AND isArchived = 0 THEN 1 END) AS declinedCount
-                    """, as: JobApplicationStatusCounts?.self)
-                }
-        )
-        var jobApplicationStatusCounts: JobApplicationStatusCounts?
+        @FetchOne var jobApplicationStatusCounts: JobApplicationStatusCounts?
         
         var selectedTab: Tab = .active
         @Shared(.isCompact) var isCompact: Bool = false
@@ -83,6 +80,28 @@ public struct JobsListLogic: Reducer, Sendable {
         public enum Tab: Equatable, Sendable {
             case active
             case archived
+        }
+        
+        // Queries
+        var jobApplicationQuery: some SelectStatementOf<JobApplication> {
+            JobApplication
+                .where {
+                    switch selectedTab {
+                    case .active: !$0.isArchived
+                    case .archived: $0.isArchived
+                    }
+                }
+                .where {
+                    let isArchivedTab = selectedTab == .archived
+                    switch activeFilter {
+                    case .all: $0.isArchived == isArchivedTab
+                    case .applied: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.applied
+                    case .interview: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.interview
+                    case .offer: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.offer
+                    case .declined: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.declined
+                    }
+                }
+                .order { $0.dateApplied.desc() }
         }
     }
 
@@ -111,61 +130,23 @@ public struct JobsListLogic: Reducer, Sendable {
         Reduce<State, Action> { state, action in
             switch action {
             case .binding(\.activeFilter):
-                return .run { [
-                    jobApplications = state.$jobApplications,
-                    activeFilter = state.activeFilter,
-                    selectedTab = state.selectedTab
-                ] _ in
-                    
-                    let isArchivedTab = selectedTab == .archived
-                    
-                    try await jobApplications.load(
-                        JobApplication
-                            .all
-                            .where {
-                                switch activeFilter {
-                                case .all: $0.isArchived == isArchivedTab
-                                case .applied: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.applied
-                                case .interview: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.interview
-                                case .offer: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.offer
-                                case .declined: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.declined
-                                }
-                            }
-                            .order { $0.dateApplied.desc() }
-                    )
+                return .run { [jobApplications = state.$jobApplications, jobApplicationQuery = state.jobApplicationQuery] _ in
+                    await updateQuery(jobApplications: jobApplications, jobApplicationQuery: jobApplicationQuery)
                 }
                 
             case .binding(\.selectedTab):
                 return .run { [
                     jobApplicationStatusCounts = state.$jobApplicationStatusCounts,
                     jobApplications = state.$jobApplications,
-                    selectedTab = state.selectedTab
+                    selectedTab = state.selectedTab,
+                    jobApplicationQuery = state.jobApplicationQuery
                 ] _ in
-                  
-                    try await jobApplications.load(
-                        JobApplication
-                            .all
-                            .where {
-                                switch selectedTab {
-                                case .active: !$0.isArchived
-                                case .archived: $0.isArchived
-                                }
-                            }
-                            .order { $0.dateApplied.desc() }
-                    )
                     
-                    let isArchivedTab = selectedTab == .archived ? 1 : 0
-                    
+                    await updateQuery(jobApplications: jobApplications, jobApplicationQuery: jobApplicationQuery)
+                                        
                     try await jobApplicationStatusCounts.load(
-                        JobApplication
-                            .select { _ in
-                                #sql("""
-                                COUNT(CASE WHEN status = 'Applied' AND isArchived = \(isArchivedTab) THEN 1 END) AS appliedCount,
-                                COUNT(CASE WHEN status = 'Interview' AND isArchived = \(isArchivedTab) THEN 1 END) AS interviewCount,
-                                COUNT(CASE WHEN status = 'Offer' AND isArchived = \(isArchivedTab) THEN 1 END) AS offerCount,
-                                COUNT(CASE WHEN status = 'Declined' AND isArchived = \(isArchivedTab) THEN 1 END) AS declinedCount
-                                """, as: JobApplicationStatusCounts?.self)
-                            }
+                        Select.jobApplicationStatusCounts(isArchivedTab: selectedTab == .archived),
+                        animation: .default
                     )
                 }
             
@@ -173,14 +154,17 @@ public struct JobsListLogic: Reducer, Sendable {
                 state.alert = nil
                 return .run { [jobApplication = state.jobApplication] _ in
                     precondition(jobApplication != nil, "How can this even be nil at this point?")
-                    try database.write { db in
-                        try JobApplication.delete(jobApplication!).execute(db)
+                    withErrorReporting {
+                        try database.write { db in
+                            try JobApplication.delete(jobApplication!).execute(db)
+                        }
                     }
                     
                     if let id = jobApplication?.id {
                         notificationManager.cancelNotification("\(id)")
                     }
                 }
+                .animation(.default)
                 
             case let .onEditButtonTapped(jobApplication):
                 state.jobApplication = jobApplication
@@ -207,16 +191,19 @@ public struct JobsListLogic: Reducer, Sendable {
                 
             case let .updateJobStatus(job: job, status: status):
                 return .run { _ in
-                    
-                    try await database.write { db in
-                        var updatedJob = job
-                        updatedJob.status = status
-                        try JobApplication.update(updatedJob).execute(db)
+                    await withErrorReporting {
+                        try await database.write { db in
+                            var updatedJob = job
+                            updatedJob.status = status
+                            try JobApplication.update(updatedJob).execute(db)
+                        }
                     }
                     
                     if let id = job.id {
                         if status == .applied {
-                            try await notificationManager.scheduleFollowUpNotification(job)
+                            await withErrorReporting {
+                                try await notificationManager.scheduleFollowUpNotification(job)
+                            }
                         } else {
                             notificationManager.cancelNotification("\(id)")
                         }
@@ -225,11 +212,12 @@ public struct JobsListLogic: Reducer, Sendable {
                 
             case let .archiveJob(job: job):
                 return .run { _ in
-                    
-                    try await database.write { db in
-                        var updatedJob = job
-                        updatedJob.isArchived = true
-                        try JobApplication.update(updatedJob).execute(db)
+                    await withErrorReporting {
+                        try await database.write { db in
+                            var updatedJob = job
+                            updatedJob.isArchived = true
+                            try JobApplication.update(updatedJob).execute(db)
+                        }
                     }
                     
                     if let id = job.id {
@@ -239,14 +227,18 @@ public struct JobsListLogic: Reducer, Sendable {
                 
             case let .unArchiveJob(job: job):
                 return .run { _ in
-                    try await database.write { db in
-                        var updatedJob = job
-                        updatedJob.isArchived = false
-                        try JobApplication.update(updatedJob).execute(db)
+                    await withErrorReporting {
+                        try await database.write { db in
+                            var updatedJob = job
+                            updatedJob.isArchived = false
+                            try JobApplication.update(updatedJob).execute(db)
+                        }
                     }
                     
                     if job.status == ApplicationStatus.applied {
-                        try await notificationManager.scheduleFollowUpNotification(job)
+                        await withErrorReporting {
+                            try await notificationManager.scheduleFollowUpNotification(job)
+                        }
                     }
                 }
                 
@@ -256,18 +248,25 @@ public struct JobsListLogic: Reducer, Sendable {
                     
                     guard jobApplications.firstIndex(where: { $0.id == job.id }) != nil else {
                         // Add new job
-                        try await database.write { db in
-                            try JobApplication.insert(job).execute(db)
+                        await withErrorReporting {
+                            try await database.write { db in
+                                try JobApplication.insert(job).execute(db)
+                            }
+                            try await rescheduleAllNotifications(jobApplications: jobApplications)
                         }
-                        try await rescheduleAllNotifications(jobApplications: jobApplications)
                         return
                     }
                     
                     // Update existing job
-                    try await database.write { db in
-                        try JobApplication.update(job).execute(db)
+                    await withErrorReporting {
+                        try await database.write { db in
+                            try JobApplication.update(job).execute(db)
+                        }
                     }
-                    try await rescheduleAllNotifications(jobApplications: jobApplications)
+                    
+                    await withErrorReporting {
+                        try await rescheduleAllNotifications(jobApplications: jobApplications)
+                    }
                 }
                 
             case .binding, .destination, .alert:
@@ -294,49 +293,14 @@ public struct JobsListLogic: Reducer, Sendable {
 
 // MARK: JobsListLogic.State initialisers
 
-public extension JobsListLogic.State {
-    init(
-        jobApplication: JobApplication? = nil,
-        destination: JobsListLogic.Destination.State? = nil,
-        alert: AlertState<JobsListLogic.Action.Alert>? = nil,
-        selectedTab: Tab = .active
-    ) {
-        self.jobApplication = jobApplication
-        self.destination = destination
-        self.alert = alert
-        self.selectedTab = selectedTab
-    }
-}
+public extension JobsListLogic.State {}
 
-// MARK: - Custom selections
+// MARK: - Queries
 
 extension JobsListLogic {
-    @Selection
-    struct TabCount: QueryRepresentable, Equatable, Sendable {
-        var activeCount: Int
-        var archivedCount: Int
-    }
-    
-    @Selection
-    struct JobApplicationStatusCounts: QueryRepresentable, Equatable, Sendable {
-        var appliedCount: Int
-        var interviewCount: Int
-        var offerCount: Int
-        var declinedCount: Int
-        
-        func countForFilter(_ filterType: FilterType) -> Int {
-            switch filterType {
-            case .all:
-                appliedCount + interviewCount + offerCount + declinedCount
-            case .applied:
-                appliedCount
-            case .interview:
-                interviewCount
-            case .offer:
-                offerCount
-            case .declined:
-                declinedCount
-            }
+    func updateQuery(jobApplications: FetchAll<JobApplication>, jobApplicationQuery: some SelectStatementOf<JobApplication>) async {
+        await withErrorReporting {
+            try await jobApplications.load(jobApplicationQuery, animation: .default)
         }
     }
 }
