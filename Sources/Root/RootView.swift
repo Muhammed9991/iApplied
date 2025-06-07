@@ -4,6 +4,7 @@ import CV
 import Jobs
 import Models
 import OSLog
+import Settings
 import SharingGRDB
 import SwiftUI
 import Theme

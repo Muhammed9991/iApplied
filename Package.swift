@@ -14,6 +14,7 @@ let package = Package(
         .library(name: "AppDatabase", targets: ["AppDatabase"]),
         .library(name: "Root", targets: ["Root"]),
         .library(name: "CV", targets: ["CV"]),
+        .library(name: "Settings", targets: ["Settings"]),
     ],
 
     dependencies: [
@@ -34,12 +35,9 @@ let package = Package(
                 "Jobs",
                 "CV",
                 "Theme",
+                "Settings",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-            ],
-            resources: [
-                .process("package-list.json"),
             ]
-
         ),
 
         .target(name: "Theme"),
@@ -55,7 +53,7 @@ let package = Package(
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
             ]
         ),
-        
+
         .testTarget(
             name: "CVTest",
             dependencies: [
@@ -85,6 +83,22 @@ let package = Package(
                 .product(name: "DependenciesTestSupport", package: "swift-dependencies"),
             ]
         ),
+
+        .target(
+            name: "Settings",
+            dependencies: [
+                "AppDatabase",
+                "Theme",
+                "Models",
+                .product(name: "SwiftUINavigation", package: "swift-navigation"),
+                .product(name: "SharingGRDB", package: "sharing-grdb"),
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+            ],
+            resources: [
+                .process("package-list.json"),
+            ]
+        ),
+
         .target(
             name: "Models",
             dependencies: [
