@@ -42,8 +42,7 @@ public struct JobsListLogic: Reducer, Sendable {
         var allJobApplications
         
         @ObservationStateIgnored
-        @FetchAll(JobApplication.all.where { !$0.isArchived }.order { $0.dateApplied.desc() })
-        var jobApplications
+        @FetchAll var jobApplications: [JobApplication]
 
         @ObservationStateIgnored
         @FetchOne(
@@ -59,19 +58,7 @@ public struct JobsListLogic: Reducer, Sendable {
         var tabCount: TabCount?
         
         @ObservationStateIgnored
-        @FetchOne(
-            wrappedValue: nil,
-            JobApplication
-                .select { _ in
-                    #sql("""
-                    COUNT(CASE WHEN status = 'Applied' AND isArchived = 0 THEN 1 END) AS appliedCount,
-                    COUNT(CASE WHEN status = 'Interview' AND isArchived = 0 THEN 1 END) AS interviewCount,
-                    COUNT(CASE WHEN status = 'Offer' AND isArchived = 0 THEN 1 END) AS offerCount,
-                    COUNT(CASE WHEN status = 'Declined' AND isArchived = 0 THEN 1 END) AS declinedCount
-                    """, as: JobApplicationStatusCounts?.self)
-                }
-        )
-        var jobApplicationStatusCounts: JobApplicationStatusCounts?
+        @FetchOne var jobApplicationStatusCounts: JobApplicationStatusCounts?
         
         var selectedTab: Tab = .active
         @Shared(.isCompact) var isCompact: Bool = false
@@ -153,18 +140,7 @@ public struct JobsListLogic: Reducer, Sendable {
                     await updateQuery(jobApplications: jobApplications, jobApplicationQuery: jobApplicationQuery)
                                         
                     try await jobApplicationStatusCounts.load(
-                        JobApplication
-                            .select {
-                                let isArchivedTab = selectedTab == .archived
-                                
-                                let jobApplicationStatusCountsColumn: JobApplicationStatusCounts.Columns? = JobApplicationStatusCounts.Columns(
-                                    appliedCount: $0.statusCount(status: .applied, isArchived: isArchivedTab),
-                                    interviewCount: $0.statusCount(status: .interview, isArchived: isArchivedTab),
-                                    offerCount: $0.statusCount(status: .offer, isArchived: isArchivedTab),
-                                    declinedCount: $0.statusCount(status: .declined, isArchived: isArchivedTab)
-                                )
-                                return jobApplicationStatusCountsColumn
-                            },
+                        Select.jobApplicationStatusCounts(isArchivedTab: selectedTab == .archived),
                         animation: .default
                     )
                 }
@@ -309,10 +285,12 @@ public extension JobsListLogic.State {
         alert: AlertState<JobsListLogic.Action.Alert>? = nil,
         selectedTab: Tab = .active
     ) {
+        self.selectedTab = selectedTab
+        self._jobApplications = FetchAll(JobApplication.all.where { !$0.isArchived }.order { $0.dateApplied.desc() })
+        self._jobApplicationStatusCounts = FetchOne(wrappedValue: nil, Select.jobApplicationStatusCounts(isArchivedTab: selectedTab == .archived))
         self.jobApplication = jobApplication
         self.destination = destination
         self.alert = alert
-        self.selectedTab = selectedTab
     }
 }
 
@@ -324,28 +302,38 @@ extension JobsListLogic {
         var activeCount: Int
         var archivedCount: Int
     }
+}
+
+@Selection
+public struct JobApplicationStatusCounts: QueryRepresentable, Equatable, Sendable {
+    var appliedCount: Int
+    var interviewCount: Int
+    var offerCount: Int
+    var declinedCount: Int
     
-    @Selection
-    struct JobApplicationStatusCounts: QueryRepresentable, Equatable, Sendable {
-        var appliedCount: Int
-        var interviewCount: Int
-        var offerCount: Int
-        var declinedCount: Int
-        
-        func countForFilter(_ filterType: FilterType) -> Int {
-            switch filterType {
-            case .all:
-                appliedCount + interviewCount + offerCount + declinedCount
-            case .applied:
-                appliedCount
-            case .interview:
-                interviewCount
-            case .offer:
-                offerCount
-            case .declined:
-                declinedCount
-            }
+    func countForFilter(_ filterType: FilterType) -> Int {
+        switch filterType {
+        case .all: appliedCount + interviewCount + offerCount + declinedCount
+        case .applied: appliedCount
+        case .interview: interviewCount
+        case .offer: offerCount
+        case .declined: declinedCount
         }
+    }
+}
+
+extension Select where Columns == JobApplicationStatusCounts.Columns.QueryValue?, From == JobApplication, Joins == Void {
+    static func jobApplicationStatusCounts(isArchivedTab: Bool) -> Self {
+        JobApplication
+            .select {
+                let jobApplicationStatusCountsColumn: JobApplicationStatusCounts.Columns? = JobApplicationStatusCounts.Columns(
+                    appliedCount: $0.statusCount(status: .applied, isArchived: isArchivedTab),
+                    interviewCount: $0.statusCount(status: .interview, isArchived: isArchivedTab),
+                    offerCount: $0.statusCount(status: .offer, isArchived: isArchivedTab),
+                    declinedCount: $0.statusCount(status: .declined, isArchived: isArchivedTab)
+                )
+                return jobApplicationStatusCountsColumn
+            }
     }
 }
 
