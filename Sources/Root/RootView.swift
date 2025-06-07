@@ -50,6 +50,15 @@ public struct RootView: View {
         .task {
             store.send(.checNotificationkAuthorisation)
         }
+        .preferredColorScheme(getPreferredColorScheme())
+    }
+
+    private func getPreferredColorScheme() -> ColorScheme? {
+        switch store.preferredColorScheme {
+        case 1: .light
+        case 2: .dark
+        default: nil // System default
+        }
     }
 }
 
@@ -75,6 +84,7 @@ public struct RootLogic: Reducer {
         var cv = CVLogic.State()
         var settings = SettingsLogic.State()
         var isAuthorisedForNotifications: Bool = false
+        @Shared(.preferredColorScheme) var preferredColorScheme
 
         public init(
             currentTab: Tab = Tab.jobList,

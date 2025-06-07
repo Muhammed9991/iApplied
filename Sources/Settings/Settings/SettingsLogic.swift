@@ -1,6 +1,12 @@
 import ComposableArchitecture
 import Foundation
 
+public extension SharedReaderKey where Self == AppStorageKey<Int>.Default {
+    static var preferredColorScheme: Self {
+        Self[.appStorage("preferredColorScheme"), default: ColorSchemeOption.system.rawValue]
+    }
+}
+
 @Reducer
 public struct SettingsLogic: Reducer {
     public init() {}
@@ -18,6 +24,7 @@ public struct SettingsLogic: Reducer {
         }
         
         var path = StackState<Path.State>()
+        @Shared(.preferredColorScheme) var preferredColorScheme
     }
     
     public enum Action: Equatable, Sendable, BindableAction {

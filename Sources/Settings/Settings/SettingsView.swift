@@ -26,6 +26,10 @@ public struct SettingsView: View {
                         store.send(.onAcknowledgementsButtonTapped)
                     } label: {
                         HStack {
+                            Image(systemName: "doc.text")
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(AppColors.accent(for: colorScheme))
+
                             Text("Acknowledgements")
                                 .foregroundColor(AppColors.textPrimary(for: colorScheme))
                             Spacer()
@@ -37,12 +41,55 @@ public struct SettingsView: View {
 
                 Section {
                     HStack {
+                        Image(systemName: "paintbrush.fill")
+                            .frame(width: 24, height: 24)
+                            .foregroundColor(AppColors.accent(for: colorScheme))
+
+                        Text("Appearance")
+                            .foregroundColor(AppColors.textPrimary(for: colorScheme))
+
+                        Spacer()
+
+                        Menu {
+                            ForEach(ColorSchemeOption.allCases, id: \.rawValue) { option in
+                                Button {
+                                    store.$preferredColorScheme.withLock { $0 = option.rawValue }
+                                } label: {
+                                    HStack {
+                                        Text(option.title)
+                                        if store.preferredColorScheme == option.rawValue {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Text(ColorSchemeOption(rawValue: store.preferredColorScheme)?.title ?? "System")
+                                    .foregroundColor(AppColors.textSecondary(for: colorScheme))
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(AppColors.textSecondary(for: colorScheme))
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Preferences")
+                }
+
+                Section {
+                    HStack {
+                        Image(systemName: "info.circle")
+                            .frame(width: 24, height: 24)
+                            .foregroundColor(AppColors.accent(for: colorScheme))
+
                         Text("Version")
                             .foregroundColor(AppColors.textPrimary(for: colorScheme))
                         Spacer()
                         Text("\(appVersion) (\(buildNumber))")
                             .foregroundColor(AppColors.textSecondary(for: colorScheme))
                     }
+                } header: {
+                    Text("App Information")
                 }
             }
             .listStyle(InsetGroupedListStyle())
