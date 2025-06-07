@@ -33,3 +33,14 @@ extension Select where Columns == JobApplicationStatusCounts.Columns.QueryValue?
             }
     }
 }
+
+extension JobApplication.TableColumns {
+    func statusCount(status: ApplicationStatus, isArchived: Bool) -> some QueryExpression<Int> {
+        Case()
+            .when(
+                self.status.eq(status).and(self.isArchived.eq(isArchived)),
+                then: 1
+            )
+            .count()
+    }
+}

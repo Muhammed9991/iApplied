@@ -37,6 +37,26 @@ public struct JobsListLogic: Reducer, Sendable {
     
     @ObservableState
     public struct State: Equatable, Sendable {
+        public init(
+            jobApplication: JobApplication? = nil,
+            destination: JobsListLogic.Destination.State? = nil,
+            alert: AlertState<JobsListLogic.Action.Alert>? = nil,
+            selectedTab: Tab = .active
+        ) {
+            self.selectedTab = selectedTab
+            
+            self._jobApplications = FetchAll(JobApplication.all.where { !$0.isArchived }.order { $0.dateApplied.desc() })
+            
+            let isArchived = selectedTab == .archived
+            
+            self._tabCount = FetchOne(wrappedValue: nil, Select.tabCount(isArchivedTab: isArchived))
+            self._jobApplicationStatusCounts = FetchOne(wrappedValue: nil, Select.jobApplicationStatusCounts(isArchivedTab: isArchived))
+            
+            self.jobApplication = jobApplication
+            self.destination = destination
+            self.alert = alert
+        }
+        
         @ObservationStateIgnored
         @FetchAll(JobApplication.all)
         var allJobApplications
@@ -45,17 +65,7 @@ public struct JobsListLogic: Reducer, Sendable {
         @FetchAll var jobApplications: [JobApplication]
 
         @ObservationStateIgnored
-        @FetchOne(
-            wrappedValue: nil,
-            JobApplication
-                .select { _ in
-                    #sql("""
-                    COUNT(CASE WHEN isArchived = 0 THEN 1 END) AS activeCount,
-                    COUNT(CASE WHEN isArchived = 1 THEN 1 END) AS archivedCount
-                    """, as: TabCount?.self)
-                }
-        )
-        var tabCount: TabCount?
+        @FetchOne var tabCount: TabCount?
         
         @ObservationStateIgnored
         @FetchOne var jobApplicationStatusCounts: JobApplicationStatusCounts?
@@ -73,11 +83,8 @@ public struct JobsListLogic: Reducer, Sendable {
         }
         
         // Queries
-        
         var jobApplicationQuery: some SelectStatementOf<JobApplication> {
-            let isArchivedTab = selectedTab == .archived
-            
-            return JobApplication
+            JobApplication
                 .where {
                     switch selectedTab {
                     case .active: !$0.isArchived
@@ -85,6 +92,7 @@ public struct JobsListLogic: Reducer, Sendable {
                     }
                 }
                 .where {
+                    let isArchivedTab = selectedTab == .archived
                     switch activeFilter {
                     case .all: $0.isArchived == isArchivedTab
                     case .applied: $0.isArchived == isArchivedTab && $0.status == ApplicationStatus.applied
@@ -159,6 +167,7 @@ public struct JobsListLogic: Reducer, Sendable {
                         notificationManager.cancelNotification("\(id)")
                     }
                 }
+                .animation(.default)
                 
             case let .onEditButtonTapped(jobApplication):
                 state.jobApplication = jobApplication
@@ -278,21 +287,7 @@ public struct JobsListLogic: Reducer, Sendable {
 
 // MARK: JobsListLogic.State initialisers
 
-public extension JobsListLogic.State {
-    init(
-        jobApplication: JobApplication? = nil,
-        destination: JobsListLogic.Destination.State? = nil,
-        alert: AlertState<JobsListLogic.Action.Alert>? = nil,
-        selectedTab: Tab = .active
-    ) {
-        self.selectedTab = selectedTab
-        self._jobApplications = FetchAll(JobApplication.all.where { !$0.isArchived }.order { $0.dateApplied.desc() })
-        self._jobApplicationStatusCounts = FetchOne(wrappedValue: nil, Select.jobApplicationStatusCounts(isArchivedTab: selectedTab == .archived))
-        self.jobApplication = jobApplication
-        self.destination = destination
-        self.alert = alert
-    }
-}
+public extension JobsListLogic.State {}
 
 // MARK: - Queries
 
@@ -301,16 +296,5 @@ extension JobsListLogic {
         await withErrorReporting {
             try await jobApplications.load(jobApplicationQuery, animation: .default)
         }
-    }
-}
-
-extension JobApplication.TableColumns {
-    func statusCount(status: ApplicationStatus, isArchived: Bool) -> some QueryExpression<Int> {
-        Case()
-            .when(
-                self.status.eq(status).and(self.isArchived.eq(isArchived)),
-                then: 1
-            )
-            .count()
     }
 }
