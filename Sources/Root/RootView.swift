@@ -4,6 +4,7 @@ import CV
 import Jobs
 import Models
 import OSLog
+import Settings
 import SharingGRDB
 import SwiftUI
 import Theme
@@ -26,28 +27,39 @@ public struct RootView: View {
     }
 
     public var body: some View {
-        TabView(selection: $store.currentTab.sending(\.selectTab)) {
-            JobsListView(store: store.scope(state: \.jobList, action: \.jobList))
-                .tag(RootLogic.Tab.jobList)
-                .tabItem {
-                    Label("Jobs", systemImage: "briefcase")
-                }
+        SplashScreen {
+            TabView(selection: $store.currentTab.sending(\.selectTab)) {
+                JobsListView(store: store.scope(state: \.jobList, action: \.jobList))
+                    .tag(RootLogic.Tab.jobList)
+                    .tabItem {
+                        Label("Jobs", systemImage: "briefcase")
+                    }
 
-            CVTabView(store: store.scope(state: \.cv, action: \.cv))
-                .tag(RootLogic.Tab.cv)
-                .tabItem {
-                    Label("CV", systemImage: "doc.text")
-                }
+                CVTabView(store: store.scope(state: \.cv, action: \.cv))
+                    .tag(RootLogic.Tab.cv)
+                    .tabItem {
+                        Label("CV", systemImage: "doc.text")
+                    }
 
-            SettingsView()
-                .tag(RootLogic.Tab.settings)
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
-                }
+                SettingsView(store: store.scope(state: \.settings, action: \.settings))
+                    .tag(RootLogic.Tab.settings)
+                    .tabItem {
+                        Label("Settings", systemImage: "gear")
+                    }
+            }
+            .accentColor(AppColors.accent(for: colorScheme))
+            .task {
+                store.send(.checNotificationkAuthorisation)
+            }
+            .preferredColorScheme(getPreferredColorScheme())
         }
-        .accentColor(AppColors.accent(for: colorScheme))
-        .task {
-            store.send(.checNotificationkAuthorisation)
+    }
+
+    private func getPreferredColorScheme() -> ColorScheme? {
+        switch store.preferredColorScheme {
+        case 1: .light
+        case 2: .dark
+        default: nil // System default
         }
     }
 }
@@ -72,17 +84,21 @@ public struct RootLogic: Reducer {
         var currentTab = Tab.jobList
         public var jobList = JobsListLogic.State()
         var cv = CVLogic.State()
+        var settings = SettingsLogic.State()
         var isAuthorisedForNotifications: Bool = false
+        @Shared(.preferredColorScheme) var preferredColorScheme
 
         public init(
             currentTab: Tab = Tab.jobList,
             jobList: JobsListLogic.State = JobsListLogic.State(),
             cv: CVLogic.State = CVLogic.State(),
+            settings: SettingsLogic.State = SettingsLogic.State(),
             isAuthorisedForNotifications: Bool = false
         ) {
             self.currentTab = currentTab
             self.jobList = jobList
             self.cv = cv
+            self.settings = settings
             self.isAuthorisedForNotifications = isAuthorisedForNotifications
         }
     }
@@ -90,6 +106,7 @@ public struct RootLogic: Reducer {
     public enum Action: Equatable, Sendable {
         case jobList(JobsListLogic.Action)
         case cv(CVLogic.Action)
+        case settings(SettingsLogic.Action)
         case selectTab(Tab)
         case checNotificationkAuthorisation
         case setNotificationAuthorisation(Bool)
@@ -101,6 +118,9 @@ public struct RootLogic: Reducer {
         }
         Scope(state: \.cv, action: \.cv) {
             CVLogic()
+        }
+        Scope(state: \.settings, action: \.settings) {
+            SettingsLogic()
         }
 
         Reduce<State, Action> { state, action in
@@ -141,7 +161,7 @@ public struct RootLogic: Reducer {
                 state.isAuthorisedForNotifications = isAuthorisedForNotifications
                 return .none
 
-            case .cv, .jobList:
+            case .cv, .jobList, .settings:
                 return .none
 
             case let .selectTab(tab):
