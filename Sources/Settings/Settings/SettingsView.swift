@@ -65,9 +65,9 @@ public struct SettingsView: View {
                             }
                         } label: {
                             HStack {
-                                Text(ColorSchemeOption(rawValue: store.preferredColorScheme)?.title ?? "System")
+                                Image(systemName: "circle.lefthalf.filled")
                                     .foregroundColor(AppColors.textSecondary(for: colorScheme))
-                                Image(systemName: "chevron.right")
+                                Text(ColorSchemeOption(rawValue: store.preferredColorScheme)?.title ?? "System")
                                     .foregroundColor(AppColors.textSecondary(for: colorScheme))
                             }
                         }
